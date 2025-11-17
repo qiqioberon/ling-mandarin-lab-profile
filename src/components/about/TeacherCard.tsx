@@ -1,6 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ExternalLink, GraduationCap, MapPin, Award } from "lucide-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious
+} from "@/components/ui/carousel";
+import { ExternalLink, GraduationCap, MapPin, Award, FileText } from "lucide-react";
 import { Teacher } from "@/data/teachers";
 
 interface TeacherCardProps {
@@ -9,12 +15,12 @@ interface TeacherCardProps {
 
 const TeacherCard = ({ teacher }: TeacherCardProps) => {
   return (
-    <Card className="border-border hover:shadow-lg transition-all">
+    <Card className="group border-border hover:border-primary/60 hover:shadow-xl transition-transform duration-300 hover:-translate-y-2 hover:scale-[1.01]">
       <CardContent className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
               <GraduationCap className="w-8 h-8 text-primary" />
             </div>
             <div>
@@ -58,30 +64,54 @@ const TeacherCard = ({ teacher }: TeacherCardProps) => {
 
         {/* Certificate */}
         <div className="pt-4 border-t border-border">
-          <div className="space-y-3">
-            <div className="aspect-video bg-muted/50 rounded-lg flex items-center justify-center">
-              <div className="text-center text-muted-foreground text-sm px-4">
-                [Certificate Thumbnail]
-                <br />
-                {teacher.name}
-              </div>
-            </div>
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="w-full border-primary text-primary hover:bg-primary/10"
-            >
-              <a
-                href={teacher.certificatePdf}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Lihat Sertifikat (PDF)
-              </a>
-            </Button>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-semibold text-foreground">Dokumen Sertifikat</h4>
+            <span className="text-xs text-muted-foreground">
+              {teacher.certificates.length ? `${teacher.certificates.length} dokumen` : "Belum tersedia"}
+            </span>
           </div>
+
+          {teacher.certificates.length ? (
+            <Carousel opts={{ align: "start", loop: true }}>
+              <CarouselContent>
+                {teacher.certificates.map((certificate, index) => (
+                  <CarouselItem key={`${teacher.id}-${index}`} className="md:basis-2/3">
+                    <a
+                      href={certificate.file}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block group/cert overflow-hidden rounded-xl border border-border bg-muted/30 hover:border-primary/60 transition-all hover:shadow-md"
+                    >
+                      {certificate.type === "image" ? (
+                        <div className="aspect-video bg-background flex items-center justify-center">
+                          <img
+                            src={certificate.file}
+                            alt={`Sertifikat ${certificate.label}`}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover/cert:scale-105"
+                          />
+                        </div>
+                      ) : (
+                        <div className="aspect-video bg-background flex flex-col items-center justify-center text-primary space-y-2">
+                          <FileText className="w-8 h-8" />
+                          <p className="text-sm font-semibold text-foreground">Dokumen PDF</p>
+                        </div>
+                      )}
+                      <div className="px-4 py-3 flex items-center justify-between text-sm font-semibold text-foreground bg-background">
+                        <span className="mr-2 line-clamp-1">{certificate.label}</span>
+                        <ExternalLink className="w-4 h-4 text-primary flex-shrink-0" />
+                      </div>
+                    </a>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:flex left-2 border-2" />
+              <CarouselNext className="hidden md:flex right-2 border-2" />
+            </Carousel>
+          ) : (
+            <div className="aspect-video bg-muted/30 rounded-lg flex items-center justify-center text-sm text-muted-foreground">
+              Sertifikat sedang diproses
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -23,10 +23,13 @@ const TeachersPreview = () => {
         {/* Teacher Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           {previewTeachers.map((teacher) => (
-            <Card key={teacher.id} className="border-border hover:shadow-lg transition-shadow">
+            <Card
+              key={teacher.id}
+              className="group border-border hover:border-primary/60 hover:shadow-xl transition-transform duration-300 hover:-translate-y-2 hover:-rotate-1 hover:scale-[1.01]"
+            >
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center transition-colors group-hover:bg-primary/20">
                     <GraduationCap className="w-6 h-6 text-primary" />
                   </div>
                   <div>

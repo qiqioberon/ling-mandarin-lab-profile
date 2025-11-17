@@ -1,3 +1,19 @@
+import annieCertificate from "@/assets/Laoshi/Annie/Annie Laoshi.jpg";
+import celineHsk from "@/assets/Laoshi/Celine/Celine HSK.pdf";
+import celineTims from "@/assets/Laoshi/Celine/Celine TIMS.jpg";
+import celineTocfl from "@/assets/Laoshi/Celine/Celine TOCFL.jpg";
+import michelleOliviaTocfl from "@/assets/Laoshi/MichelleOlivia/Michelle TOCFL A2.pdf";
+import michellePutriHsk from "@/assets/Laoshi/MichellePutri/Michelle P HSK.pdf";
+import tasyaPortfolio from "@/assets/Laoshi/Tasya/Tasya 1.jpg";
+import tasyaArticle from "@/assets/Laoshi/Tasya/Tasya Article.jpg";
+import tasyaHsk from "@/assets/Laoshi/Tasya/Tasya HSK.pdf";
+
+export interface TeacherCertificate {
+  label: string;
+  file: string;
+  type: "image" | "pdf";
+}
+
 export interface Teacher {
   id: number;
   name: string;
@@ -8,74 +24,88 @@ export interface Teacher {
   xinzhongBackground: string;
   certification: string;
   experience: string;
-  certificateImage: string;
-  certificatePdf: string;
+  certificates: TeacherCertificate[];
 }
 
 export const teachers: Teacher[] = [
   {
     id: 1,
     name: "Celine",
-    mandarinName: "小玲 (Xiǎo Líng)",
+    mandarinName: "Laoshi Celine",
     location: "Jakarta & Online",
     education: "Xin Zhong School",
-    degree: "Lulusan Mandarin",
-    xinzhongBackground: "Alumni Xin Zhong School dengan prestasi akademik unggulan",
-    certification: "HSK Level 5",
-    experience: "3 tahun mengajar, spesialisasi anak usia 5-15 tahun dan pemula dewasa",
-    certificateImage: "https://example.com/certificates/celine-cert-thumb.jpg",
-    certificatePdf: "https://example.com/certificates/celine-hsk5.pdf"
+    degree: "Sertifikasi pengajaran Mandarin",
+    xinzhongBackground: "Alumni Xin Zhong School dengan fokus pengajaran HSK dan TOCFL.",
+    certification: "HSK 5 - TOCFL - TIMS Teaching Certificate",
+    experience: "Berpengalaman membimbing anak dan dewasa pemula hingga menengah dengan fokus pengucapan yang rapi.",
+    certificates: [
+      { label: "HSK - Celine", file: celineHsk, type: "pdf" },
+      { label: "TIMS - Celine", file: celineTims, type: "image" },
+      { label: "TOCFL - Celine", file: celineTocfl, type: "image" }
+    ]
   },
   {
     id: 2,
-    name: "Linda",
-    mandarinName: "琳达 (Lín Dá)",
+    name: "Tasya",
+    mandarinName: "Laoshi Tasya",
     location: "Surabaya & Online",
-    education: "Universitas Petra, Chinese Literature",
-    degree: "S1 Sastra Mandarin",
-    xinzhongBackground: "Alumni Xin Zhong School, aktif dalam kompetisi Mandarin nasional",
-    certification: "HSK Level 6, Teaching Certificate",
-    experience: "5 tahun mengajar, fokus pada persiapan HSK dan conversation",
-    certificateImage: "https://example.com/certificates/linda-cert-thumb.jpg",
-    certificatePdf: "https://example.com/certificates/linda-hsk6.pdf"
+    education: "Xin Zhong School",
+    degree: "Lulusan program intensif bahasa Mandarin",
+    xinzhongBackground: "Aktif di komunitas Xin Zhong dan kerap membawakan materi kreatif untuk murid remaja.",
+    certification: "HSK - Artikel & karya tulis Mandarin",
+    experience: "3 tahun mengajar, fokus meningkatkan percaya diri berbicara dan pemahaman bacaan.",
+    certificates: [
+      { label: "HSK - Tasya", file: tasyaHsk, type: "pdf" },
+      { label: "Artikel Mandarin - Tasya", file: tasyaArticle, type: "image" },
+      { label: "Portofolio Tasya", file: tasyaPortfolio, type: "image" }
+    ]
   },
   {
     id: 3,
-    name: "Michael",
-    mandarinName: "文豪 (Wén Háo)",
+    name: "Annie",
+    mandarinName: "Laoshi Annie",
     location: "Bandung & Online",
-    education: "Xin Zhong School, Taiwan Normal University",
-    degree: "S1 Teaching Chinese as Second Language",
-    xinzhongBackground: "Alumni Xin Zhong School, melanjutkan studi di Taiwan",
-    certification: "HSK Level 6, TCSOL Certificate",
-    experience: "4 tahun mengajar, spesialisasi business Mandarin dan HSK preparation",
-    certificateImage: "https://example.com/certificates/michael-cert-thumb.jpg",
-    certificatePdf: "https://example.com/certificates/michael-tcsol.pdf"
+    education: "Xin Zhong School",
+    degree: "Spesialisasi pengajaran anak-anak",
+    xinzhongBackground: "Alumni Xin Zhong yang terbiasa mengajar siswa usia dini dengan pendekatan fun learning.",
+    certification: "Sertifikasi pengajaran Xin Zhong",
+    experience: "4 tahun mengajar, memadukan latihan percakapan dan permainan kosakata.",
+    certificates: [{ label: "Sertifikat Annie", file: annieCertificate, type: "image" }]
   },
   {
     id: 4,
-    name: "Stefani",
-    mandarinName: "思琪 (Sī Qí)",
+    name: "Michelle Olivia",
+    mandarinName: "Laoshi Michelle Olivia",
     location: "Jakarta & Online",
     education: "Xin Zhong School",
-    degree: "Lulusan Mandarin",
-    xinzhongBackground: "Alumni Xin Zhong School dengan nilai terbaik di kelas",
-    certification: "HSK Level 5",
-    experience: "2 tahun mengajar, fokus pada anak-anak dan remaja",
-    certificateImage: "https://example.com/certificates/stefani-cert-thumb.jpg",
-    certificatePdf: "https://example.com/certificates/stefani-hsk5.pdf"
+    degree: "Sertifikasi TOCFL",
+    xinzhongBackground: "Alumni Xin Zhong dengan fokus pengembangan kemampuan dasar percakapan.",
+    certification: "TOCFL A2",
+    experience: "Mendampingi banyak pemula dewasa memulai percakapan sehari-hari dalam Mandarin.",
+    certificates: [{ label: "TOCFL A2 - Michelle Olivia", file: michelleOliviaTocfl, type: "pdf" }]
   },
   {
     id: 5,
-    name: "Kevin",
-    mandarinName: "凯文 (Kǎi Wén)",
+    name: "Michelle Putri",
+    mandarinName: "Laoshi Michelle Putri",
     location: "Medan & Online",
-    education: "Xin Zhong School, Beijing Language and Culture University",
-    degree: "S1 Chinese Language",
-    xinzhongBackground: "Alumni Xin Zhong School, pernah tinggal di Beijing selama 4 tahun",
-    certification: "HSK Level 6, Native-like fluency",
-    experience: "6 tahun mengajar, spesialisasi advanced conversation dan cultural context",
-    certificateImage: "https://example.com/certificates/kevin-cert-thumb.jpg",
-    certificatePdf: "https://example.com/certificates/kevin-hsk6.pdf"
+    education: "Xin Zhong School",
+    degree: "Sertifikasi HSK",
+    xinzhongBackground: "Alumni Xin Zhong yang aktif membina kelas persiapan ujian.",
+    certification: "HSK",
+    experience: "5 tahun mengajar, membantu siswa menaklukkan ujian HSK lewat latihan intensif.",
+    certificates: [{ label: "HSK - Michelle Putri", file: michellePutriHsk, type: "pdf" }]
+  },
+  {
+    id: 6,
+    name: "Rachel",
+    mandarinName: "Laoshi Rachel",
+    location: "Online",
+    education: "Xin Zhong School",
+    degree: "Sertifikasi menyusul",
+    xinzhongBackground: "Instruktur Xin Zhong yang tengah menyiapkan sertifikat terbarunya.",
+    certification: "Sertifikat sedang diproses",
+    experience: "Berpengalaman mengajar percakapan sehari-hari dan kelas privat fleksibel.",
+    certificates: []
   }
 ];
