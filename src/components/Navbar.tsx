@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
-import logo from "@/assets/logo.png";
+import logoPandaOnly from "@/assets/logoPandaOnly.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,7 +20,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-            <img src={logo} alt="Ling Mandarin Lab" className="h-10 md:h-12 w-auto" />
+            <img src={logoPandaOnly} alt="Ling Mandarin Lab" className="h-10 md:h-12 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}

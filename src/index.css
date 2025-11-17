@@ -91,3 +91,44 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .animate-chat-wave {
+    animation: chat-wave 6s ease-in-out infinite;
+  }
+
+  .caret-blink {
+    animation: caret-blink 1s steps(1) infinite;
+  }
+
+  @keyframes chat-wave {
+    0%,
+    12% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    35% {
+      opacity: 0.9;
+      transform: translateY(-8px) scale(1.02);
+    }
+    65% {
+      opacity: 0.65;
+      transform: translateY(6px) scale(0.98);
+    }
+    100% {
+      opacity: 0.4;
+      transform: translateY(10px) scale(0.96);
+    }
+  }
+
+  @keyframes caret-blink {
+    0%,
+    49% {
+      opacity: 1;
+    }
+    50%,
+    100% {
+      opacity: 0;
+    }
+  }
+}
