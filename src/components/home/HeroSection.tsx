@@ -65,8 +65,28 @@ const HeroSection = () => {
       </div>
 
       <div className="container px-4 sm:px-6 lg:px-8">
-        <div className="grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="order-2 space-y-6 lg:order-1">
+        <div className="grid items-center justify-center gap-2 lg:grid-cols-[0.8fr_1.2fr]">
+
+          <div className="order-1 lg:order-1">
+            <div className="relative mt-10 h-72 sm:h-80 w-full">
+              {pandaSlides.map((panda, index) => (
+                <img
+                  key={panda.alt}
+                  src={panda.src}
+                  alt={panda.alt}
+                  className={`absolute inset-x-0 bottom-0 mx-auto w-[85%] lg:w-full max-w-sm transition-all duration-700 ${activeSlide === index
+                    ? "translate-y-0 opacity-100"
+                    : "pointer-events-none translate-y-8 opacity-0"
+                    }`}
+                  style={{ transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)" }}
+                />
+              ))}
+            </div>
+
+
+          </div>
+
+          <div className="order-2 space-y-6 lg:order-2">
             <div className="space-y-4">
               <img
                 src={logoFull}
@@ -145,34 +165,7 @@ const HeroSection = () => {
             </div>
           </div>
 
-          <div className="order-1 lg:order-2">
-            <div className="relative mx-auto max-w-lg rounded-[2.5rem] border border-border bg-white/80 p-6 shadow-xl backdrop-blur">
-              <div className="relative ml-auto max-w-xs">
-                <div className="rounded-3xl border border-border bg-white p-5 shadow-lg">
-                  <p className="text-3xl font-semibold text-primary">&#21644;&#22909;!</p>
-                  <p className="text-sm uppercase tracking-[0.4em] text-muted-foreground">n&#464; halo!</p>
-                  <p className="mt-2 text-sm text-muted-foreground">Hello, nice to meet you.</p>
-                </div>
-                <div className="absolute -bottom-3 right-10 h-6 w-6 rotate-45 rounded-sm border border-border bg-white" />
-              </div>
 
-              <div className="relative mt-10 h-72 sm:h-80">
-                {pandaSlides.map((panda, index) => (
-                  <img
-                    key={panda.alt}
-                    src={panda.src}
-                    alt={panda.alt}
-                    className={`absolute inset-x-0 bottom-0 mx-auto w-[85%] max-w-sm transition-all duration-700 ${activeSlide === index
-                      ? "translate-y-0 opacity-100"
-                      : "pointer-events-none translate-y-8 opacity-0"
-                      }`}
-                    style={{ transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)" }}
-                  />
-                ))}
-              </div>
-
-            </div>
-          </div>
         </div>
       </div>
     </section>

@@ -223,8 +223,8 @@ const TikTokSection = () => {
                   <div
                     key={certificate.mentor}
                     className={`absolute inset-0 transition-all duration-700 ${activeCertificate === index
-                        ? "translate-y-0 opacity-100"
-                        : "pointer-events-none translate-y-8 opacity-0"
+                      ? "translate-y-0 opacity-100"
+                      : "pointer-events-none translate-y-8 opacity-0"
                       }`}
                   >
                     <div className="flex h-full flex-col gap-4 rounded-2xl bg-white/90 p-4 shadow">
@@ -252,7 +252,7 @@ const TikTokSection = () => {
                   </div>
                 ))}
 
-                <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+                <div className="absolute bottom-0 left-1/2 flex -translate-x-1/2 gap-2">
                   {certificates.map((certificate, index) => (
                     <button
                       key={certificate.mentor}
