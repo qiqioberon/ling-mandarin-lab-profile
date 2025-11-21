@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, ArrowDown } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import { whatsappUrl } from "@/data/stats";
 import logoFull from "@/assets/LOGO.svg";
 import panda1 from "@/assets/PandaDialog/1.svg";
@@ -14,6 +14,7 @@ import schoolXinZhong from "@/assets/School/xin_zhong.svg";
 import schoolHsing from "@/assets/School/hsing.svg";
 import schoolMedical from "@/assets/School/medical.svg";
 import schoolNtcust from "@/assets/School/ntcust_long.svg";
+import whatsappIcon from "@/assets/Medsos/wa.svg";
 
 const highlightPoints = [
   "Yuk, belajar dengan para laoshi penyabar dan bersertifikasi HSK & TOCFL dengan pengalaman studi dan magang di Taiwan!",
@@ -54,6 +55,10 @@ const HeroSection = () => {
 
   const scrollToTeachers = () => {
     document.getElementById("teachers-preview")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleWhatsappClick = () => {
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 
   const slideCount = pandaSlides.length;
@@ -157,26 +162,28 @@ const HeroSection = () => {
               ))}
             </div>
 
-            <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+            <div className="flex flex-col gap-3 pt-2 md:flex-row sm:items-center">
               <Button
-                asChild
                 size="lg"
-                className="h-14 flex-1 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
+                onClick={handleWhatsappClick}
+                className="relative py-5 md:py-8 lg:px-6 w-full md:w-auto sm:min-w-[260px] md:min-w-[400px]  flex-1 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
               >
-                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-                  <MessageCircle className="mr-2 h-5 w-5" />
-                  Chat via WhatsApp untuk Harga & Jadwal
-                </a>
+                <span className="flex w-full items-center justify-center gap-2">
+                  <img src={whatsappIcon} alt="WhatsApp" className="size-7" />
+                  <p className="text-base sm:text-lg">Chat WA: Harga & Jadwal</p>
+                </span>
               </Button>
 
               <Button
                 onClick={scrollToTeachers}
                 variant="outline"
                 size="lg"
-                className="h-14 flex-1 rounded-full border-primary text-primary hover:bg-primary/10"
+                className="py-5 md:py-8 lg:px-6 w-full sm:w-full md:w-auto sm:min-w-[220px] flex-1 rounded-full border-primary text-primary hover:bg-primary/10"
               >
-                <ArrowDown className="mr-2 h-5 w-5" />
-                Lihat Profil Laoshi
+                <span className="flex w-full items-center justify-center gap-2 text-base sm:text-lg">
+                  <ArrowDown className=" size-7" />
+                  Lihat Profil Laoshi
+                </span>
               </Button>
             </div>
 
