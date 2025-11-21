@@ -58,29 +58,32 @@ const HeroSection = () => {
   }, [slideCount]);
 
   return (
-    <section className="relative overflow-hidden bg-[hsl(37,45%,96%)] py-16 md:py-24">
+    <section className="relative overflow-hidden bg-[hsl(37,45%,96%)] lg:py-16 py-4">
       <div className="absolute inset-0 -z-10">
         <div className="absolute -top-24 -right-10 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-accent/10 blur-3xl" />
       </div>
 
-      <div className="container px-4 sm:px-6 lg:px-8">
-        <div className="grid items-center justify-center gap-2 lg:grid-cols-[0.8fr_1.2fr]">
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="relative flex flex-col items-center justify-center gap-2 w-full min-h-fit lg:grid lg:grid-cols-[0.8fr_1.2fr]">
 
-          <div className="order-1 lg:order-1">
-            <div className="relative mt-10 h-72 sm:h-80 w-full">
-              {pandaSlides.map((panda, index) => (
-                <img
-                  key={panda.alt}
-                  src={panda.src}
-                  alt={panda.alt}
-                  className={`absolute inset-x-0 bottom-0 mx-auto w-[85%] lg:w-full max-w-sm transition-all duration-700 ${activeSlide === index
-                    ? "translate-y-0 opacity-100"
-                    : "pointer-events-none translate-y-8 opacity-0"
-                    }`}
-                  style={{ transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)" }}
-                />
-              ))}
+          <div className="order-1 lg:order-1 w-full">
+            <div className="relative lg:mt-10 w-full">
+              <div className="grid w-full items-start">
+                {pandaSlides.map((panda, index) => (
+                  <img
+                    key={panda.alt}
+                    src={panda.src}
+                    alt={panda.alt}
+                    // put every image into the same grid cell (overlap) but keep them in normal flow
+                    className={`col-start-1 row-start-1 w-full transition-all duration-700 ${activeSlide === index
+                      ? "translate-y-0 opacity-100"
+                      : "pointer-events-none translate-y-8 opacity-0"
+                      }`}
+                    style={{ transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)" }}
+                  />
+                ))}
+              </div>
             </div>
 
 

@@ -8,7 +8,7 @@ import TestimonialsSection from "@/components/home/TestimonialsSection";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background w-full">
       <Navbar />
       <main>
         <HeroSection />
