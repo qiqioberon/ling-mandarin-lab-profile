@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, ArrowDown } from "lucide-react";
 import { whatsappUrl } from "@/data/stats";
-import logoFull from "@/assets/logoNoBG.png";
+import logoFull from "@/assets/LOGO.svg";
 import panda1 from "@/assets/PandaDialog/1.svg";
 import panda2 from "@/assets/PandaDialog/2.svg";
 import panda3 from "@/assets/PandaDialog/3.svg";
@@ -16,8 +16,7 @@ import schoolMedical from "@/assets/School/medical.svg";
 import schoolNtcust from "@/assets/School/ntcust_long.svg";
 
 const highlightPoints = [
-  "Learn from trusted professionals yang sabar dalam mendampingi tiap murid.",
-  "Mentor kami pernah belajar dan mengajar di universitas ternama di Taiwan dan Indonesia."
+  "Yuk, belajar dengan para laoshi penyabar dan bersertifikasi HSK & TOCFL dengan pengalaman studi dan magang di Taiwan!",
 ];
 
 const schoolLogos = [
@@ -40,8 +39,18 @@ const pandaSlides = [
   { src: panda4, alt: "Panda dialog 4" }
 ];
 
+const typewriterPhrases = [
+  "Lebih dari 1,1 miliar orang bisa berbahasa Mandarin (Ethnologue, 2023).",
+  "1-2% lowongan kerja di Eropa mensyaratkan kemampuan Mandarin (OECD, 2023).",
+  "40% alumni yang menembus perusahaan asing terkait Tiongkok/Asia Timur berasal dari jurusan Mandarin (Times Indonesia).",
+  "Kemampuan Mandarin bisa membawa gaji di atas Rp10 juta per bulan di sektor teknologi, perdagangan internasional, dan perusahaan multinasional (Suara.com)."
+];
+
 const HeroSection = () => {
   const [activeSlide, setActiveSlide] = useState(0);
+  const [typewriterIndex, setTypewriterIndex] = useState(0);
+  const [displayedText, setDisplayedText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const scrollToTeachers = () => {
     document.getElementById("teachers-preview")?.scrollIntoView({ behavior: "smooth" });
@@ -56,6 +65,32 @@ const HeroSection = () => {
 
     return () => clearInterval(rotation);
   }, [slideCount]);
+
+  useEffect(() => {
+    const currentPhrase = typewriterPhrases[typewriterIndex];
+    let timeout: ReturnType<typeof setTimeout>;
+
+    if (!isDeleting) {
+      if (displayedText.length < currentPhrase.length) {
+        timeout = setTimeout(() => {
+          setDisplayedText(currentPhrase.slice(0, displayedText.length + 1));
+        }, 45);
+      } else {
+        timeout = setTimeout(() => setIsDeleting(true), 1600);
+      }
+    } else {
+      if (displayedText.length > 0) {
+        timeout = setTimeout(() => {
+          setDisplayedText(currentPhrase.slice(0, displayedText.length - 1));
+        }, 28);
+      } else {
+        setIsDeleting(false);
+        setTypewriterIndex((prev) => (prev + 1) % typewriterPhrases.length);
+      }
+    }
+
+    return () => clearTimeout(timeout);
+  }, [displayedText, isDeleting, typewriterIndex]);
 
   return (
     <section className="relative overflow-hidden bg-[hsl(37,45%,96%)] lg:py-16 py-4">
@@ -89,20 +124,25 @@ const HeroSection = () => {
 
           </div>
 
-          <div className="order-2 space-y-6 lg:order-2">
+          <div className="order-2 space-y-6 lg:order-2 w-full">
             <div className="space-y-4">
               <img
                 src={logoFull}
                 alt="Ling Mandarin Lab"
-                className="h-auto max-w-md drop-shadow-md"
+                className="h-auto max-w-md drop-shadow-md w-full"
               />
 
               <h1 className="text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl">
                 Crafting cozy journeys in Mandarin
               </h1>
-              <p className="text-lg text-muted-foreground">
-                Temukan pengalaman belajar yang hangat, privat, dan terarah langsung bersama mentor
-                alumni Xin Zhong School dan berbagai universitas mitra.
+              <p className="text-base sm:text-xl text-muted-foreground min-h-[4.25rem] sm:min-h-[3.5rem]">
+                <span className="relative inline-flex items-center">
+                  <span>{displayedText}</span>
+                  <span
+                    aria-hidden
+                    className="ml-2 inline-block h-6 w-[2px] animate-pulse rounded bg-primary align-middle"
+                  />
+                </span>
               </p>
             </div>
 
@@ -110,7 +150,7 @@ const HeroSection = () => {
               {highlightPoints.map((text, index) => (
                 <div
                   key={`highlight-${index}`}
-                  className="rounded-2xl border border-border bg-white/70 px-4 py-3 text-base shadow-sm backdrop-blur"
+                  className="rounded-2xl border border-border bg-white/70 px-4 py-3 text-sm sm:text-xl shadow-sm backdrop-blur"
                 >
                   {text}
                 </div>
