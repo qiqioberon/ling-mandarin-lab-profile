@@ -4,10 +4,14 @@ import { stats } from "@/data/stats";
 import { TrendingUp, Users, Award, ArrowLeft, ArrowRight } from "lucide-react";
 import phoneMockup from "@/assets/Phone/nitipanjay.png";
 import phoneVideo from "@/assets/Phone/tiktokVideo.mp4";
+import hskLogo from "@/assets/LogoSertifikat/HSK.svg";
+import tocflLogo from "@/assets/LogoSertifikat/TOCFL.svg";
 import celineHSK from "@/assets/Laoshi/Celine/Celine HSK.pdf";
 import celineHSKPreview from "@/assets/Laoshi/Celine/celine-hsk-1.png";
+import celineTOCFL from "@/assets/Laoshi/Celine/Celine TOCFL.jpg";
 import michelleHSK from "@/assets/Laoshi/MichellePutri/Michelle P HSK.pdf";
 import michelleHSKPreview from "@/assets/Laoshi/MichellePutri/michelle-hsk-1.png";
+import michelleTOCFL from "@/assets/Laoshi/MichelleOlivia/Michelle TOCFL A2.pdf";
 import tasyaHSK from "@/assets/Laoshi/Tasya/Tasya HSK.pdf";
 import tasyaHSKPreview from "@/assets/Laoshi/Tasya/tasya-hsk-1.png";
 
@@ -17,24 +21,58 @@ const icons = {
   2: Award
 };
 
-const certificates = [
+type CertificateType = "HSK" | "TOCFL";
+
+const certificateLogos: Record<CertificateType, string> = {
+  HSK: hskLogo,
+  TOCFL: tocflLogo
+};
+
+type Certificate = {
+  src: string;
+  preview: string;
+  mentor: string;
+  description: string;
+  type: CertificateType;
+  previewType?: "image" | "pdf";
+};
+
+const certificates: Certificate[] = [
   {
     src: celineHSK,
     preview: celineHSKPreview,
     mentor: "Laoshi Celine",
-    description: "HSK Certificate"
+    description: "HSK Certificate",
+    type: "HSK" as CertificateType
+  },
+  {
+    src: celineTOCFL,
+    preview: celineTOCFL,
+    mentor: "Laoshi Celine",
+    description: "TOCFL Certificate",
+    type: "TOCFL" as CertificateType
+  },
+  {
+    src: michelleTOCFL,
+    preview: michelleTOCFL,
+    mentor: "Laoshi Michelle Olivia",
+    description: "TOCFL Certificate",
+    type: "TOCFL" as CertificateType,
+    previewType: "pdf" as const
   },
   {
     src: michelleHSK,
     preview: michelleHSKPreview,
     mentor: "Laoshi Michelle Putri",
-    description: "HSK Certificate"
+    description: "HSK Certificate",
+    type: "HSK" as CertificateType
   },
   {
     src: tasyaHSK,
     preview: tasyaHSKPreview,
     mentor: "Laoshi Tasya",
-    description: "HSK Certificate"
+    description: "HSK Certificate",
+    type: "HSK" as CertificateType
   }
 ];
 
@@ -221,20 +259,41 @@ const TikTokSection = () => {
               >
                 {certificates.map((certificate, index) => (
                   <div
-                    key={certificate.mentor}
+                    key={`${certificate.mentor}-${certificate.type}`}
                     className={`absolute inset-0 transition-all duration-700 ${activeCertificate === index
                       ? "translate-y-0 opacity-100"
                       : "pointer-events-none translate-y-8 opacity-0"
                       }`}
                   >
                     <div className="flex h-full flex-col gap-4 rounded-2xl bg-white/90 p-4 shadow">
-                      <div className="flex-1 overflow-hidden rounded-xl border border-border bg-muted/20">
-                        <img
-                          src={certificate.preview}
-                          alt={`Preview sertifikat ${certificate.mentor}`}
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
+                      <div className="relative flex-1 overflow-hidden rounded-xl border border-border bg-muted/20">
+                        <div className="absolute right-3 top-3 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 shadow-md">
+                          <img
+                            src={certificateLogos[certificate.type]}
+                            alt={`Logo sertifikat ${certificate.type}`}
+                            className="h-8 w-8"
+                            loading="lazy"
+                          />
+                        </div>
+                        {certificate.previewType === "pdf" ? (
+                          <object
+                            data={certificate.preview}
+                            type="application/pdf"
+                            className="h-full w-full"
+                            aria-label={`Preview PDF sertifikat ${certificate.mentor}`}
+                          >
+                            <div className="flex h-full items-center justify-center p-4 text-center text-sm text-muted-foreground">
+                              Preview PDF tidak dapat dimuat. Klik tombol di bawah untuk membuka berkas.
+                            </div>
+                          </object>
+                        ) : (
+                          <img
+                            src={certificate.preview}
+                            alt={`Preview sertifikat ${certificate.mentor}`}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        )}
                       </div>
                       <div className="text-center">
                         <p className="text-lg font-semibold text-foreground">{certificate.mentor}</p>
@@ -246,7 +305,7 @@ const TikTokSection = () => {
                         rel="noopener noreferrer"
                         className="rounded-full border border-primary/40 px-4 py-2 text-center text-sm font-medium text-primary transition hover:bg-primary/10"
                       >
-                        Lihat sertifikat asli (PDF)
+                        Lihat sertifikat asli
                       </a>
                     </div>
                   </div>
@@ -255,7 +314,7 @@ const TikTokSection = () => {
                 <div className="absolute bottom-0 left-1/2 flex -translate-x-1/2 gap-2">
                   {certificates.map((certificate, index) => (
                     <button
-                      key={certificate.mentor}
+                      key={`${certificate.mentor}-${certificate.type}-dot`}
                       type="button"
                       onClick={() => selectCertificate(index)}
                       className={`h-2.5 rounded-full transition ${activeCertificate === index ? "w-8 bg-primary" : "w-2.5 bg-muted-foreground/40"
