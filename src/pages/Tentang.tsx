@@ -34,22 +34,29 @@ const Tentang = () => {
                   <div className="flex items-center space-x-3 mb-4">
                     <Lightbulb className="w-6 h-6 text-primary" />
                     <h2 className="text-2xl font-bold text-foreground">
-                      Tentang Logo Ling Chinese Lab
+                      Kenapa harus Ling Chinese Lab?
                     </h2>
                   </div>
                   <p className="text-muted-foreground leading-relaxed">
-                    Logo <span className="font-semibold text-foreground">Ling Chinese Lab</span> menampilkan
-                    karakter panda yang ramah dengan topi wisuda, melambangkan pembelajaran yang menyenangkan
-                    namun tetap berkualitas tinggi. Desain menggunakan palet warna <span className="font-semibold">pastel
-                      nude</span> yang hangat dan tenang, menciptakan kesan yang <span className="font-semibold">friendly,
-                        approachable, dan trustworthy</span>.
+                    <span className="font-semibold text-foreground">Ling Chinese Lab</span> Lebih dari 1,1 miliar orang di dunia bisa Bahasa Mandarin (Ethnologue, 2023). Artinya, kamu nggak cuma belajar bahasa, kamu lagi buka pintu ke dunia baru: bisnis, karier, beasiswa, dan relasi internasional. 🌏🚀
                   </p>
                   <p className="text-muted-foreground leading-relaxed">
-                    Elemen visual sederhana dengan line art yang clean mencerminkan filosofi kami:
-                    belajar Mandarin bisa jadi <span className="font-semibold text-foreground">dekat, mudah,
-                      dan menyenangkan</span> untuk semua orang. Panda sebagai simbol Tiongkok juga
-                    memperkuat identitas sebagai tempat belajar bahasa Mandarin yang autentik.
+                    Di tengah persaingan kerja yang makin ketat: <span className="font-semibold text-foreground">data ini bukan main-main</span> untuk semua orang.
                   </p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    📌 1–2% lowongan kerja di Eropa sekarang meminta kandidat yang bisa Bahasa Mandarin (OECD, 2023) – skill ini bikin CV kamu beda sendiri di mata HR.</p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    📌 40% alumni yang kerja di perusahaan asing dengan sektor terkait Tiongkok & Asia Timur berasal dari jurusan Bahasa Mandarin (Times Indonesia) – Mandarin itu bahasa “jalur cepat” ke karier internasional.</p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    📌 Pekerja yang bisa Bahasa Mandarin berpotensi digaji lebih dari Rp10 juta/bulan di sektor teknologi, perdagangan internasional, dan perusahaan multinasional (Suara.com) – ini bukan cuma hobi, tapi investasi masa depan. 💰📈
+                  </p>
+                  <p className="text-muted-foreground leading-relaxed">'Di Ling Chinese
+
+                    Bukan sekadar hafal kosakata, tapi berani ngomong dan pakai Mandarin di dunia nyata 💬
+
+                    Belajar dengan gaya yang nyaman, terstruktur, dan relevan untuk kerja & bisnis 💼
+
+                    Step-by-step dari dasar sampai siap dipakai untuk interview, meeting, dan kerja sama internasional 🤝</p>
                 </CardContent>
               </Card>
 
