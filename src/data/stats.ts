@@ -8,13 +8,13 @@ export interface Stat {
 export const stats: Stat[] = [
   {
     id: 1,
-    label: "Views Video Celine",
+    label: "Views Video Ling Chinese Lab",
     value: "100K+",
     description: "Total views di TikTok"
   },
   {
     id: 2,
-    label: "Jumlah Murid Celine",
+    label: "Jumlah Murid Ling Chinese Lab",
     value: "50+",
     description: "Murid aktif saat ini"
   },

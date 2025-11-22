@@ -124,7 +124,7 @@ const HeroSection = () => {
                   />
                 ))}
               </div>
-            </div>
+            </div>c
           </div>
           <div className="order-2 space-y-6 lg:order-2 w-full">
             <div className="space-y-4 relative">
