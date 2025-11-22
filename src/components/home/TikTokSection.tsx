@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { stats } from "@/data/stats";
-import { TrendingUp, Users, Award, ArrowLeft, ArrowRight } from "lucide-react";
-import phoneMockup from "@/assets/Phone/nitipanjay.png";
-import phoneVideo from "@/assets/Phone/tiktokVideo.mp4";
+import { TrendingUp, Users, Award, ArrowLeft, ArrowRight, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import hskLogo from "@/assets/LogoSertifikat/HSK.svg";
 import tocflLogo from "@/assets/LogoSertifikat/TOCFL.svg";
+import videoOne from "@/assets/Phone/video1.mp4";
+import videoTwo from "@/assets/Phone/Video 2.mp4";
+import igIcon from "@/assets/Medsos/ig.svg";
+import tiktokIcon from "@/assets/Medsos/tiktok.svg";
 import celineHSK from "@/assets/Laoshi/Celine/Celine HSK.pdf";
 import celineHSKPreview from "@/assets/Laoshi/Celine/celine-hsk-1.png";
 import celineTOCFL from "@/assets/Laoshi/Celine/Celine TOCFL.jpg";
@@ -27,6 +29,11 @@ const certificateLogos: Record<CertificateType, string> = {
   HSK: hskLogo,
   TOCFL: tocflLogo
 };
+
+const videos = [
+  { src: videoOne, title: "Video 1" },
+  { src: videoTwo, title: "Video 2" }
+];
 
 type Certificate = {
   src: string;
@@ -77,10 +84,39 @@ const certificates: Certificate[] = [
 ];
 
 const TikTokSection = () => {
+  const [activeVideo, setActiveVideo] = useState(0);
+  const [isVideoMuted, setIsVideoMuted] = useState(true);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(true);
   const [activeCertificate, setActiveCertificate] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const videoRefs = useRef<HTMLVideoElement[]>([]);
   const resumeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalCertificates = certificates.length;
+  const totalVideos = videos.length;
+
+  useEffect(() => {
+    videoRefs.current.forEach((vid, idx) => {
+      if (!vid) return;
+      vid.muted = isVideoMuted;
+      if (idx !== activeVideo) {
+        vid.pause();
+        vid.currentTime = 0;
+      }
+    });
+
+    const current = videoRefs.current[activeVideo];
+    if (current) {
+      current.muted = isVideoMuted;
+      const playPromise = current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsVideoPlaying(!current.paused))
+          .catch(() => setIsVideoPlaying(false));
+      } else {
+        setIsVideoPlaying(!current.paused);
+      }
+    }
+  }, [activeVideo, isVideoMuted]);
 
   useEffect(() => {
     if (isPaused || totalCertificates <= 1) {
@@ -101,6 +137,35 @@ const TikTokSection = () => {
       }
     };
   }, []);
+
+  const handlePlayPauseVideo = () => {
+    const current = videoRefs.current[activeVideo];
+    if (!current) return;
+
+    if (current.paused) {
+      const playPromise = current.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => setIsVideoPlaying(true)).catch(() => setIsVideoPlaying(false));
+      } else {
+        setIsVideoPlaying(true);
+      }
+    } else {
+      current.pause();
+      setIsVideoPlaying(false);
+    }
+  };
+
+  const toggleVideoMute = () => {
+    setIsVideoMuted((prev) => !prev);
+  };
+
+  const showPrevVideo = () => {
+    setActiveVideo((prev) => (prev - 1 + totalVideos) % totalVideos);
+  };
+
+  const showNextVideo = () => {
+    setActiveVideo((prev) => (prev + 1) % totalVideos);
+  };
 
   const pauseSlider = () => {
     setIsPaused(true);
@@ -156,24 +221,92 @@ const TikTokSection = () => {
     <section className="bg-[#f7f1ea] py-16 md:py-24">
       <div className="container px-4 sm:px-6 lg:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-[0.95fr_1.05fr]">
-          {/* Video mockup */}
+          {/* Video carousel */}
           <div className="flex justify-center">
-            <div className="relative w-full max-w-xs sm:max-w-sm">
-              <div className="absolute inset-6 rounded-[3rem] bg-primary/10 blur-3xl" />
-              <img
-                src={phoneMockup}
-                alt="Phone mockup"
-                className="relative z-10 w-full rounded-[3rem] shadow-[0_20px_60px_rgba(88,63,49,0.2)]"
-              />
-              <div className="absolute left-1/2 top-[9%] z-20 w-[72%] -translate-x-1/2 rounded-[2rem] shadow-2xl">
-                <video
-                  src={phoneVideo}
-                  muted
-                  loop
-                  autoPlay
-                  playsInline
-                  className="w-full rounded-[2rem] border-4 border-background"
-                />
+            <div className="w-full max-w-xl space-y-4">
+              <div className="relative overflow-hidden rounded-3xl border border-border bg-black/80 shadow-lg">
+                {videos.map((video, index) => (
+                  <video
+                    key={video.title}
+                    ref={(el) => {
+                      if (el) {
+                        videoRefs.current[index] = el;
+                      }
+                    }}
+                    src={video.src}
+                    muted={isVideoMuted}
+                    playsInline
+                    loop
+                    className={`h-full w-full object-contain ${activeVideo === index ? "block" : "hidden"}`}
+                    onPlay={() => setIsVideoPlaying(true)}
+                    onPause={() => setIsVideoPlaying(false)}
+                    onEnded={() => setIsVideoPlaying(false)}
+                  />
+                ))}
+
+                <div className="absolute inset-0 flex items-center justify-between px-2 sm:px-4">
+                  <button
+                    type="button"
+                    onClick={showPrevVideo}
+                    className="rounded-full bg-white/80 p-2 text-foreground shadow hover:bg-white"
+                    aria-label="Video sebelumnya"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={showNextVideo}
+                    className="rounded-full bg-white/80 p-2 text-foreground shadow hover:bg-white"
+                    aria-label="Video selanjutnya"
+                  >
+                    <ArrowRight className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="absolute bottom-4 left-4 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handlePlayPauseVideo}
+                    className="flex items-center gap-1 rounded-full bg-white/90 px-3 py-2 text-sm font-medium text-foreground shadow"
+                    aria-label={isVideoPlaying ? "Jeda video" : "Putar video"}
+                  >
+                    {isVideoPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                    {isVideoPlaying ? "Pause" : "Play"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={toggleVideoMute}
+                    className="flex items-center gap-1 rounded-full bg-white/90 px-3 py-2 text-sm font-medium text-foreground shadow"
+                    aria-label={isVideoMuted ? "Aktifkan suara" : "Matikan suara"}
+                  >
+                    {isVideoMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                    {isVideoMuted ? "Sound off" : "Sound on"}
+                  </button>
+                  <span className="rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white">
+                    {videos[activeVideo].title} / {totalVideos}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href="https://www.instagram.com/lingchineselab"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground shadow-sm hover:bg-primary/10"
+                >
+                  <img src={igIcon} alt="Instagram" className="h-5 w-5" />
+                  <span>@lingchineselab</span>
+                </a>
+                <a
+                  href="https://www.tiktok.com/@ceeehaaaaa?_r=1&_t=ZS-91V8Wr9Xixp"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground shadow-sm hover:bg-primary/10"
+                >
+                  <img src={tiktokIcon} alt="TikTok" className="h-5 w-5" />
+                  <span>@ceeehaaaaa</span>
+                </a>
               </div>
             </div>
           </div>
