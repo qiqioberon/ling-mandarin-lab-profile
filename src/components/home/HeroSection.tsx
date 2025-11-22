@@ -203,13 +203,13 @@ const HeroSection = () => {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-6 pt-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 pt-6">
               {schoolLogos.map((school) => (
                 <div
                   key={school.alt}
-                  className="flex h-14 max-w-[160px] items-center justify-center rounded-xl bg-white/80 px-4 shadow-sm backdrop-blur"
+                  className="flex h-24 sm:h-28 lg:h-32 items-center justify-center rounded-xl bg-white/80 px-4 sm:px-6 shadow-sm backdrop-blur"
                 >
-                  <img src={school.src} alt={school.alt} className="max-h-10 w-full object-contain" />
+                  <img src={school.src} alt={school.alt} className="h-[80%] w-full object-contain" />
                 </div>
               ))}
             </div>
