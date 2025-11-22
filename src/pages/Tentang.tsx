@@ -15,7 +15,7 @@ const Tentang = () => {
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto text-center space-y-6">
               <h1 className="text-4xl md:text-5xl font-bold text-foreground">
-                Tentang Ling Mandarin Lab
+                Tentang Ling Chinese Lab
               </h1>
               <p className="text-lg text-muted-foreground">
                 Tempat belajar Mandarin yang menyenangkan dan efektif untuk semua kalangan
@@ -34,20 +34,20 @@ const Tentang = () => {
                   <div className="flex items-center space-x-3 mb-4">
                     <Lightbulb className="w-6 h-6 text-primary" />
                     <h2 className="text-2xl font-bold text-foreground">
-                      Tentang Logo Ling Mandarin Lab
+                      Tentang Logo Ling Chinese Lab
                     </h2>
                   </div>
                   <p className="text-muted-foreground leading-relaxed">
-                    Logo <span className="font-semibold text-foreground">Ling Mandarin Lab</span> menampilkan 
-                    karakter panda yang ramah dengan topi wisuda, melambangkan pembelajaran yang menyenangkan 
-                    namun tetap berkualitas tinggi. Desain menggunakan palet warna <span className="font-semibold">pastel 
-                    nude</span> yang hangat dan tenang, menciptakan kesan yang <span className="font-semibold">friendly, 
-                    approachable, dan trustworthy</span>.
+                    Logo <span className="font-semibold text-foreground">Ling Chinese Lab</span> menampilkan
+                    karakter panda yang ramah dengan topi wisuda, melambangkan pembelajaran yang menyenangkan
+                    namun tetap berkualitas tinggi. Desain menggunakan palet warna <span className="font-semibold">pastel
+                      nude</span> yang hangat dan tenang, menciptakan kesan yang <span className="font-semibold">friendly,
+                        approachable, dan trustworthy</span>.
                   </p>
                   <p className="text-muted-foreground leading-relaxed">
-                    Elemen visual sederhana dengan line art yang clean mencerminkan filosofi kami: 
-                    belajar Mandarin bisa jadi <span className="font-semibold text-foreground">dekat, mudah, 
-                    dan menyenangkan</span> untuk semua orang. Panda sebagai simbol Tiongkok juga 
+                    Elemen visual sederhana dengan line art yang clean mencerminkan filosofi kami:
+                    belajar Mandarin bisa jadi <span className="font-semibold text-foreground">dekat, mudah,
+                      dan menyenangkan</span> untuk semua orang. Panda sebagai simbol Tiongkok juga
                     memperkuat identitas sebagai tempat belajar bahasa Mandarin yang autentik.
                   </p>
                 </CardContent>
@@ -86,10 +86,10 @@ const Tentang = () => {
             <Card className="max-w-3xl mx-auto border-primary/20 bg-primary/5">
               <CardContent className="p-8 text-center">
                 <p className="text-muted-foreground leading-relaxed">
-                  <span className="font-semibold text-foreground">Ling Mandarin Lab</span> dibangun 
-                  oleh para alumni <span className="font-semibold text-foreground">Xin Zhong School</span>, 
-                  sekolah dengan tradisi pendidikan bahasa Mandarin yang kuat. Kami memahami tantangan 
-                  belajar Mandarin dan berkomitmen untuk membuat proses belajar menjadi lebih mudah, 
+                  <span className="font-semibold text-foreground">Ling Chinese Lab</span> dibangun
+                  oleh para alumni <span className="font-semibold text-foreground">Xin Zhong School</span>,
+                  sekolah dengan tradisi pendidikan bahasa Mandarin yang kuat. Kami memahami tantangan
+                  belajar Mandarin dan berkomitmen untuk membuat proses belajar menjadi lebih mudah,
                   efektif, dan menyenangkan untuk semua kalangan.
                 </p>
               </CardContent>

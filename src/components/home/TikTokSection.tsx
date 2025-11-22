@@ -144,7 +144,7 @@ const TikTokSection = () => {
           <div className="space-y-6">
             <div className="space-y-3">
               <p className="text-sm font-semibold uppercase tracking-[0.35em] text-muted-foreground">
-                Kenapa Pilih Ling Mandarin Lab?
+                Kenapa Pilih Ling Chinese Lab?
               </p>
               <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
                 Belajar dengan metode yang terbukti efektif dan menyenangkan

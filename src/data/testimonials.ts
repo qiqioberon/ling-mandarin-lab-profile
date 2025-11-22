@@ -19,7 +19,7 @@ export const testimonials: Testimonial[] = [
     name: "Budi Santoso",
     age: 35,
     mandarinName: "文杰 (Wén Jié)",
-    text: "Metode mengajar di Ling Mandarin Lab sangat efektif. Dalam 6 bulan saya lulus HSK 4!"
+    text: "Metode mengajar di Ling Chinese Lab sangat efektif. Dalam 6 bulan saya lulus HSK 4!"
   },
   {
     id: 3,

@@ -66,7 +66,7 @@ const HeroSection = () => {
   useEffect(() => {
     const rotation = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % slideCount);
-    }, 3200);
+    }, 1000);
 
     return () => clearInterval(rotation);
   }, [slideCount]);
@@ -116,7 +116,7 @@ const HeroSection = () => {
                     src={panda.src}
                     alt={panda.alt}
                     // put every image into the same grid cell (overlap) but keep them in normal flow
-                    className={`col-start-1 row-start-1 w-full transition-all duration-700 ${activeSlide === index
+                    className={`col-start-1 row-start-1 w-full transition-all duration-[50ms] ${activeSlide === index
                       ? "translate-y-0 opacity-100"
                       : "pointer-events-none translate-y-8 opacity-0"
                       }`}
@@ -133,7 +133,7 @@ const HeroSection = () => {
             <div className="space-y-4">
               <img
                 src={logoFull}
-                alt="Ling Mandarin Lab"
+                alt="Ling Chinese Lab"
                 className="h-auto max-w-md drop-shadow-md w-full"
               />
 

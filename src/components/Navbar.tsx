@@ -20,7 +20,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-            <img src={logoPandaOnly} alt="Ling Mandarin Lab" className="h-10 md:h-12 w-auto" />
+            <img src={logoPandaOnly} alt="Ling Chinese Lab" className="h-10 md:h-12 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}
@@ -29,11 +29,10 @@ const Navbar = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`text-base font-medium transition-colors hover:text-primary ${
-                  isActive(item.path)
+                className={`text-base font-medium transition-colors hover:text-primary ${isActive(item.path)
                     ? "text-primary border-b-2 border-primary pb-1"
                     : "text-foreground"
-                }`}
+                  }`}
               >
                 {item.name}
               </Link>
@@ -59,11 +58,10 @@ const Navbar = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setIsOpen(false)}
-                  className={`text-base font-medium py-2 px-4 rounded-lg transition-colors ${
-                    isActive(item.path)
+                  className={`text-base font-medium py-2 px-4 rounded-lg transition-colors ${isActive(item.path)
                       ? "bg-primary text-primary-foreground"
                       : "hover:bg-muted"
-                  }`}
+                    }`}
                 >
                   {item.name}
                 </Link>

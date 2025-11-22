@@ -10,7 +10,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
           {/* Brand */}
           <div className="space-y-4">
-            <img src={logo} alt="Ling Mandarin Lab" className="h-12 w-auto" />
+            <img src={logo} alt="Ling Chinese Lab" className="h-12 w-auto" />
             <p className="text-sm text-muted-foreground max-w-xs">
               Membawa bahasa Mandarin jadi dekat dan menyenangkan untuk semua.
             </p>
@@ -19,8 +19,8 @@ const Footer = () => {
           {/* Contact */}
           <div className="space-y-4">
             <h3 className="font-semibold text-foreground">Hubungi Kami</h3>
-            <Button 
-              asChild 
+            <Button
+              asChild
               size="sm"
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
@@ -57,7 +57,7 @@ const Footer = () => {
 
         <div className="mt-8 pt-8 border-t border-border">
           <p className="text-xs text-muted-foreground text-center">
-            © {new Date().getFullYear()} Ling Mandarin Lab – All rights reserved.
+            © {new Date().getFullYear()} Ling Chinese Lab – All rights reserved.
           </p>
         </div>
       </div>
