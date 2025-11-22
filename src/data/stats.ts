@@ -9,7 +9,7 @@ export const stats: Stat[] = [
   {
     id: 1,
     label: "Views Video Celine",
-    value: "120K+",
+    value: "100K+",
     description: "Total views di TikTok"
   },
   {
@@ -20,8 +20,8 @@ export const stats: Stat[] = [
   },
   {
     id: 3,
-    label: "Mentor Bersertifikat HSK",
-    value: "5",
+    label: "Mentor Bersertifikat HSK & TOCFL",
+    value: "6",
     description: "Laoshi profesional"
   }
 ];

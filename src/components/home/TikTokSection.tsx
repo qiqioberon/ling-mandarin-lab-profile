@@ -151,7 +151,7 @@ const TikTokSection = () => {
               </h2>
               <p className="text-base text-muted-foreground">
                 Dibimbing langsung oleh laoshi yang aktif membagikan ilmu lewat video pembelajaran dan
-                pengalaman mengajar privat dari berbagai level HSK.
+                pengalaman mengajar privat dari berbagai level HSK dan TOCFL.
               </p>
             </div>
 
@@ -182,7 +182,7 @@ const TikTokSection = () => {
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-                    Sertifikat HSK
+                    Sertifikat HSK & TOCFL
                   </p>
                   <h3 className="text-xl font-bold text-foreground">
                     Bukti kompetensi para laoshi bersertifikat
