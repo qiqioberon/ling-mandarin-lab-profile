@@ -125,16 +125,13 @@ const HeroSection = () => {
                 ))}
               </div>
             </div>
-
-
           </div>
-
           <div className="order-2 space-y-6 lg:order-2 w-full">
-            <div className="space-y-4">
+            <div className="space-y-4 relative">
               <img
                 src={logoFull}
                 alt="Ling Chinese Lab"
-                className="h-auto max-w-md drop-shadow-md w-full"
+                className="h-auto max-w-lg drop-shadow-md w-full"
               />
 
               <h1 className="text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl">
