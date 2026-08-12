@@ -1,252 +1,1553 @@
-# Prompt Pengembangan — E-Book Berbayar + Checkout Midtrans + In-Browser PDF Reader (Serverless)
+Backend Integration
+Backend Integration to initiate payment​
+To obtain the payment.url, you will need to hit this API through your Backend : 
 
-> Dokumen ini berisi **3 prompt siap-pakai** untuk dipaste ke AI coding tool (Lovable / Cursor / Claude Code / v0):
-> 1. **Prompt A — Arsitektur & Backend Serverless** (Supabase + Vercel Functions, tanpa VPS)
-> 2. **Prompt B — Frontend UI** (Store, Cart, Checkout, halaman unlock)
-> 3. **Prompt C — In-Browser PDF Reader** (baca e-book di web, anti-download langsung)
->
-> Codebase sudah ada: **Vite + React 18 + TypeScript + Tailwind + shadcn/ui**, deploy ke **Vercel**, palet warna nude pastel (cream `#F5F5EB`, warm-brown `#B3907A`, beige, sand — sudah jadi CSS variables di `src/index.css`). Routing pakai `react-router-dom`. Belum ada halaman store/checkout/reader/backend.
+Endpoint
+Type
+Value
+HTTP Method
 
----
+POST
 
-## Konteks Arsitektur (WAJIB dibaca AI sebelum coding)
+API endpoint (sandbox)
 
-**Kendala keras:** TIDAK BOLEH pakai VPS / server yang selalu menyala. Harus 100% serverless.
+https://api-sandbox.doku.com/checkout/v1/payment
 
-**Solusi stack (semua serverless, free-tier friendly):**
+API endpoint (production)
 
-| Kebutuhan | Teknologi | Kenapa |
-|---|---|---|
-| Hosting frontend | **Vercel** (sudah dipakai, ada `vercel.json`) | Static + serverless functions |
-| API / backend logic | **Vercel Serverless Functions** (folder `/api`) | Jalan on-demand, no VPS |
-| Database | **Supabase Postgres** | Managed, serverless, gratis 500MB |
-| Auth pembeli | **Supabase Auth (magic link / OTP email)** | Tanpa password, cocok e-book |
-| Penyimpanan file PDF | **Supabase Storage (private bucket)** | File PDF TIDAK public, hanya diakses via signed URL |
-| Payment gateway | **Midtrans Snap** | Sesuai requirement |
-| Pengiriman produk | Email/WhatsApp + akses in-app | Setelah `settlement` |
+https://api.doku.com/checkout/v1/payment
 
-**Prinsip keamanan inti:** PDF asli **tidak pernah** diletakkan di folder `public/` atau bucket publik. PDF disimpan di **private Supabase Storage**. User hanya bisa membacanya lewat **signed URL berumur pendek** yang di-generate serverless function SETELAH memverifikasi bahwa user sudah membayar (cek tabel `orders.status = 'paid'`). Jadi meski frontend statis, file tetap terkunci di server.
+Request 
+Here is the sample of request header to obtain payment.url:
 
----
 
-## PROMPT A — Arsitektur & Backend Serverless (Supabase + Vercel Functions)
+Copy
+Client-Id: MCH-0001-10791114622547
+Request-Id: fdb69f47-96da-499d-acec-7cdc318ab2fe
+Request-Timestamp: 2020-08-11T08:45:42Z
+Signature: HMACSHA256=1jap2tpgvWt83tG4J7IhEwUrwmMt71OaIk0oL0e6sPM=
+Request Header Explanation
+Parameter
+Description
+client-id
 
-```
-Kamu adalah senior full-stack engineer. Aku punya project Vite + React 18 + TypeScript + Tailwind + shadcn/ui yang di-deploy ke Vercel. Aku mau menambahkan sistem penjualan e-book PDF berbayar dengan syarat MUTLAK: arsitektur 100% SERVERLESS, TIDAK BOLEH pakai VPS atau server yang selalu menyala. Gunakan Supabase (Postgres + Auth + Storage) dan Vercel Serverless Functions (folder /api).
+Client ID retrieved from DOKU Back Office
 
-TUGAS: Rancang & buat seluruh backend + skema database + serverless functions.
+request-id
 
-=== 1. SKEMA DATABASE (Supabase Postgres) ===
-Buat file migration SQL. Tabel yang dibutuhkan:
+Unique random string (max 128 characters) generated from merchant side to protect duplicate request
 
-- products
-  - id (uuid, pk)
-  - slug (text, unique)            -- "rahasia-huruf-mandarin-vol-1"
-  - title (text)
-  - description (text)
-  - price (integer)               -- dalam rupiah, cth 60000
-  - cover_url (text)              -- boleh public (cover only)
-  - pdf_path (text)               -- path di private bucket, cth "ebooks/rahasia-vol1.pdf"
-  - is_active (boolean, default true)
-  - created_at (timestamptz, default now())
+request-timestamp
 
-- orders
-  - id (uuid, pk)
-  - order_ref (text, unique)      -- yang dikirim ke Midtrans (order_id), cth "LCL-<timestamp>-<rand>"
-  - product_id (uuid, fk -> products)
-  - buyer_email (text)
-  - buyer_name (text)
-  - buyer_whatsapp (text)
-  - amount (integer)
-  - status (text)                 -- 'pending' | 'paid' | 'failed' | 'expired'
-  - midtrans_transaction_id (text, nullable)
-  - snap_token (text, nullable)
-  - paid_at (timestamptz, nullable)
-  - created_at (timestamptz, default now())
+Timestamp request on UTC time in ISO8601 UTC+0 format. It means to proceed transaction on UTC+7 (WIB), merchant need to subtract time with 7. Ex: to proceed transaction on September 22th 2020 at 08:51:00 WIB, the timestamp should be 2020-09-22T01:51:00Z
 
-- entitlements  (siapa boleh baca apa)
-  - id (uuid, pk)
-  - user_id (uuid, nullable, fk -> auth.users)  -- diisi saat user login
-  - buyer_email (text)                          -- fallback identifikasi via email
-  - product_id (uuid, fk -> products)
-  - order_id (uuid, fk -> orders)
-  - granted_at (timestamptz, default now())
-  - UNIQUE(buyer_email, product_id)
+signature
 
-Aktifkan Row Level Security (RLS):
-- products: SELECT boleh untuk semua (public read; tapi kolom pdf_path JANGAN diekspos ke client — gunakan view/kolom terpisah, atau hanya di-query dari service role di server).
-- orders & entitlements: TIDAK ADA akses langsung dari anon client. Semua akses lewat serverless function pakai SERVICE ROLE KEY (disimpan di Vercel env var, bukan di client).
+Security parameter that needs to be generated on merchant Backend and placed to the header request to ensure that the request is coming from valid merchant. Please refer to this section to generate the signature
 
-=== 2. SUPABASE STORAGE ===
-Buat bucket PRIVATE bernama "ebooks" (public = false). PDF asli diupload ke sini. Client TIDAK PERNAH punya akses langsung; hanya bisa via signed URL yang di-generate function di poin 3d.
+Here is the sample of request body to obtain payment.url, you can send a simple request for a basic payment page and you can send the parameter according to your needs :  
 
-=== 3. VERCEL SERVERLESS FUNCTIONS (folder /api) ===
-Semua pakai TypeScript. Baca secret dari process.env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, MIDTRANS_SERVER_KEY, MIDTRANS_CLIENT_KEY, MIDTRANS_IS_PRODUCTION.
 
-a) POST /api/checkout
-   - Terima: { productId, buyerEmail, buyerName, buyerWhatsapp }
-   - Validasi input (zod). Ambil harga produk dari DB (JANGAN percaya harga dari client).
-   - Buat order_ref unik. Insert row orders (status 'pending').
-   - Panggil Midtrans Snap API (create transaction) pakai MIDTRANS_SERVER_KEY, item_details = produk, customer_details = buyer.
-   - Simpan snap_token ke order. Return { snapToken, orderRef } ke client.
+Basic Request
 
-b) POST /api/midtrans-webhook  (HTTP Notification dari Midtrans — INI KUNCI serverless-nya)
-   - Endpoint publik yang dipanggil server Midtrans saat status pembayaran berubah.
-   - WAJIB verifikasi signature_key = sha512(order_id + status_code + gross_amount + MIDTRANS_SERVER_KEY). Tolak kalau tidak cocok.
-   - Kalau transaction_status == 'settlement' atau 'capture' (fraud_status 'accept'):
-       * update orders.status = 'paid', paid_at = now(), simpan midtrans_transaction_id
-       * insert/upsert row entitlements (buyer_email + product_id)
-       * trigger pengiriman notifikasi (lihat poin e)
-   - Kalau 'expire'/'cancel'/'deny' -> update status sesuai.
-   - Idempotent: aman kalau webhook dipanggil berkali-kali (jangan dobel-grant).
+Full Request
 
-c) GET /api/order-status?orderRef=...
-   - Return { status } untuk polling dari halaman "menunggu pembayaran".
+Copy
+{
+    "order": {
+        "amount": 20000,
+        "invoice_number": "INV-20210231-0001"
+    },
+    "payment": {
+        "payment_due_date": 60
+    }
+}
+Body Parameter
+Type
+Mandatory
+Description
+order.amount
 
-d) POST /api/get-reader-url
-   - Terima: { productId } + auth (token Supabase user ATAU email terverifikasi via magic link).
-   - Cek di entitlements apakah user/email ini punya akses ke productId.
-   - Kalau YA: generate SIGNED URL Supabase Storage untuk pdf_path, expiry SINGKAT (cth 60–120 detik). Return { signedUrl }.
-   - Kalau TIDAK: return 403.
-   - Ini memastikan hanya pembeli yang bisa mengakses PDF, meski frontend statis.
+number
 
-e) Pengiriman produk setelah bayar (dipanggil dari webhook):
-   - Kirim email ke buyer_email berisi link "Baca E-Book" (mengarah ke /library atau /read/:slug) + magic link login Supabase.
-   - Gunakan Supabase Auth admin generateLink (magic link) ATAU layanan email serverless (Resend API). Jangan pakai SMTP server sendiri.
-   - (Opsional) trigger pesan WhatsApp via API pihak ketiga yang berbasis HTTP (mis. Fonnte/Wablas) — cukup HTTP call dari function, tetap serverless.
+Mandatory
 
-=== 4. ENV & KEAMANAN ===
-- Buat file .env.example berisi semua nama env var (tanpa nilai).
-- SUPABASE_SERVICE_ROLE_KEY & MIDTRANS_SERVER_KEY HANYA dipakai di /api (server-side). JANGAN pernah di-bundle ke client. Client cukup pakai VITE_SUPABASE_ANON_KEY & VITE_MIDTRANS_CLIENT_KEY.
-- Tambahkan dokumentasi singkat di README: cara set env di Vercel, cara set URL webhook di dashboard Midtrans, cara upload PDF ke bucket private.
+In IDR Currency and without decimal
+Max length: 12
 
-DELIVERABLE: file SQL migration, semua file di /api, helper client Supabase (src/lib/supabase.ts), .env.example, dan update README. Beri komentar jelas di tiap function.
-```
+order.invoice_number
 
----
+string
 
-## PROMPT B — Frontend UI (Store, Cart, Checkout, Unlock)
+Mandatory
 
-```
-Lanjutkan project yang sama (Vite + React + TS + Tailwind + shadcn/ui, deploy Vercel, backend Supabase + Vercel Functions sudah dibuat di prompt sebelumnya). Sekarang buat UI frontend-nya.
+Generated by merchant to identify the order. Max length: 64
+Notes: If you have Credit Card channel activated, the maximum length is 30 chars due to the acquirer's requirements
 
-BRAND & DESIGN SYSTEM (WAJIB dipatuhi, sudah ada di src/index.css):
-- Palet nude pastel: cream #F5F5EB (background), sand #EFE7DA, beige #C1B6A3, warm-brown #B3907A (primary), teks warm-brown gelap. Gunakan CSS variables yang sudah ada (bg-background, text-foreground, bg-primary, dst) dan token custom (cream, sand, beige, warm-brown, light-beige).
-- Aksen merah maroon untuk tombol utama & harga (gunakan warna existing brand seperti di HeroSection). Sudut membulat (--radius: 1rem). Font & tone hangat, ramah, sedikit playful (ada maskot panda "Ling"). Logo di public/logo.png & public/logoPandaOnly.png.
-- Gunakan komponen shadcn/ui yang SUDAH ADA di src/components/ui (button, card, input, label, dialog, drawer, sonner/toast, checkbox, form, badge, separator, dll). Reuse Navbar & Footer yang sudah ada.
-- Responsive mobile-first. Bahasa Indonesia.
+If you are using KKI, all the symbols are not allowed. Ensure you do not put any symbol on Invoice number value.
 
-TAMBAHKAN ROUTE BARU di src/App.tsx (di atas catch-all "*"):
-- /store            -> halaman katalog/produk
-- /checkout         -> halaman checkout
-- /payment/pending  -> menunggu konfirmasi pembayaran (polling /api/order-status)
-- /library          -> daftar e-book milik user (setelah login/beli)
-- /read/:slug       -> reader (dibuat di prompt C)
+payment.payment_due_date
 
-=== HALAMAN 1: /store (Official Store) ===
-Tiru gaya screenshot yang sudah kami buat:
-- Header "OFFICIAL STORE — Ling Chinese Lab".
-- Kartu produk unggulan "E-Book: Rahasia Huruf Mandarin (Vol. 1)" dengan:
-  * gambar cover (cover_url), badge "BEST SELLER"
-  * judul, deskripsi singkat, bullet fitur (✓ Cocok pemula–menengah, ✓ 10 unsur radikal, ✓ Step menulis, ✓ Latihan soal + kunci)
-  * harga "Rp 60.000"
-  * tombol "Tambah ke Keranjang" (warm/maroon)
-- Ambil data produk dari Supabase (tabel products, hanya kolom aman: title, description, price, cover_url, slug — JANGAN pdf_path).
+number
 
-=== HALAMAN 2: Keranjang (Cart) ===
-- Implement sebagai Drawer/Sheet (shadcn `drawer` atau `sheet`) yang muncul dari bawah/samping.
-- Tampilkan: thumbnail + judul + harga, qty (untuk e-book kunci qty=1), subtotal, biaya layanan (opsional, cth Rp 2.500), Grand Total.
-- Tombol hijau "Lanjut Pembayaran — Rp XX.XXX" -> ke /checkout.
-- State cart pakai React state / context (produk digital, boleh cukup 1 item). JANGAN pakai localStorage untuk data sensitif; cart boleh di memory.
+Optional
 
-=== HALAMAN 3: /checkout ===
-Tiru layout screenshot checkout kami, 2 kolom (di mobile jadi 1 kolom):
-- Kolom kiri "Data Pembeli" (react-hook-form + zod):
-  * Email (required, validasi email)
-  * Nama Lengkap (required)
-  * Nomor HP / WhatsApp (required, validasi angka)
-  * Alamat Pengiriman: karena produk DIGITAL (PDF), TAMPILKAN CATATAN "Produk digital — tidak perlu alamat pengiriman fisik." dan sembunyikan/opsional-kan field alamat. (Jangan wajibkan alamat.)
-  * Kode Voucher (opsional).
-- Kolom kanan "Rincian Pesanan":
-  * item + harga, subtotal, diskon voucher, biaya layanan, Grand Total (maroon, tebal).
-  * Badge "Pembayaran diproses aman via Midtrans · QRIS · Transfer Bank · GoPay · OVO · Dana".
-  * Checkbox WAJIB: "Saya menyetujui Syarat & Ketentuan" + "Saya menyetujui Kebijakan Privasi".
-  * Tombol "Bayar Sekarang — Rp XX.XXX" (disabled sampai form valid & checkbox dicentang).
-- Saat submit:
-  1. POST ke /api/checkout dengan data pembeli + productId.
-  2. Terima { snapToken }.
-  3. Muat Midtrans Snap.js (script https://app.sandbox.midtrans.com/snap/snap.js untuk sandbox, atau production URL; pakai VITE_MIDTRANS_CLIENT_KEY di atribut data-client-key).
-  4. Panggil window.snap.pay(snapToken, { onSuccess, onPending, onError, onClose }).
-  5. onSuccess/onPending -> navigate ke /payment/pending?orderRef=...
+The payment due date of the checkout page in minutes. Default : 60 minutes. Max Length: 6
 
-ALUR UX YANG HARUS TERGAMBAR (tampilkan juga sebagai stepper/indikator di UI kalau memungkinkan):
-  1. Customer memilih produk E-Book PDF di store.
-  2. Masukkan ke keranjang -> halaman Checkout.
-  3. Isi Data Pembeli (Email, Nama, WhatsApp). Alamat fisik diabaikan karena produk digital.
-  4. Setujui S&K -> klik "Bayar Sekarang".
-  5. Diarahkan ke Midtrans (Snap popup) untuk memilih & menyelesaikan pembayaran (QRIS/Transfer/GoPay/OVO/Dana).
-  6. Setelah pembayaran settlement, akses/file PDF dikirim via Email/WhatsApp DAN e-book langsung bisa dibuka di /library.
+This basic request only could be implement for selected payment method, such as :  
 
-=== HALAMAN 4: /payment/pending ===
-- Ambil orderRef dari query.
-- Polling GET /api/order-status?orderRef=... setiap 3–5 detik.
-- Tampilkan animasi loading + langkah alur di atas (stepper aktif di langkah 5).
-- Jika status 'paid' -> tampilkan sukses + tombol "Buka E-Book Saya" -> /library, dan info "Link juga dikirim ke email & WhatsApp".
-- Jika 'expired'/'failed' -> tampilkan gagal + tombol coba lagi -> /checkout.
+Virtual Account
 
-=== HALAMAN 5: /library ===
-- Butuh identitas user: login via Supabase magic link (masukkan email -> terima link). Atau kalau datang dari email dengan magic link, langsung ter-login.
-- Setelah login, query entitlements milik user/email -> tampilkan daftar e-book yang dimiliki sebagai kartu, tombol "Baca" -> /read/:slug.
-- Kalau belum punya e-book: empty state ramah + tombol ke /store.
+Credit Card
 
-DELIVERABLE: semua komponen halaman di src/pages & src/components, integrasi Snap.js, form validation, state cart, dan konsisten dengan design system nude pastel. Reuse Navbar/Footer. Beri toast (sonner) untuk feedback aksi.
-```
+QRIS 
 
----
+Convenience Store
 
-## PROMPT C — In-Browser PDF Reader (baca e-book di web, anti-download langsung)
+E-money (OVO and Linkaja)
 
-```
-Lanjutkan project yang sama. Buat halaman reader e-book /read/:slug yang menampilkan PDF LANGSUNG DI DALAM WEB (bukan link download mentah), dengan proteksi agar hanya pembeli yang bisa membacanya dan file tidak gampang di-download utuh.
+Order object
 
-STACK: Tetap serverless. PDF asli ada di Supabase Storage PRIVATE bucket. Gunakan library render PDF sisi-client: react-pdf (berbasis pdf.js) atau @react-pdf-viewer/core. Tambahkan dependency yang perlu.
+Copy
+{
+"order": {
+  "amount": 80000,
+  "invoice_number": "INV-{{$timestamp}}",
+  "currency": "IDR",
+  "callback_url": "http://merchantcallbackurl.domain/",
+  "callback_url_cancel": "https://merchantcallbackurl-cancel.domain",
+  "callback_url_result": "https://merchantcallbackurl-cancel.domain",
+  "language":"EN",
+  "auto_redirect":true,
+  "disable_retry_payment" :true,
+  "recover_abandoned_cart":true,
+  "expired_recovered_cart":2,
+  "line_items": [
+    {
+        "id":"001",
+        "name":"Fresh flowers",
+        "quantity":1,
+        "price":40000,
+        "sku": "FF01",
+        "category": "gift-and-flowers",
+        "url": "http://item-url.domain/",
+        "image_url":"http://image-url.domain/",
+        "type":"ABC"
+    },
+    {
+        "id":"002",
+        "name":"T-shirt",
+        "quantity":1,
+        "price":40000,
+        "sku": "T01",
+        "category": "clothing",
+        "url": "http://item-url.domain/",
+        "image_url":"http://image-url.domain/",
+        "type":"ABC"
+    }
+  ]
+}
+Search
+Body Parameter
+Type`
+Mandatory
+Description
+order.amount
 
-ALUR:
-1. Saat halaman /read/:slug dibuka:
-   - Pastikan user ter-autentikasi (Supabase session). Kalau belum, redirect ke /library untuk login magic link.
-   - Panggil POST /api/get-reader-url dengan { productId (dari slug) } + auth token.
-   - Backend cek entitlement. Kalau valid -> balikin SIGNED URL berumur pendek (60–120 detik). Kalau tidak -> 403 -> tampilkan halaman "Kamu belum memiliki e-book ini" + tombol ke /store.
-2. Render PDF dari signed URL memakai react-pdf:
-   - Tampilkan per halaman, dengan kontrol: << halaman sebelumnya, indikator "Halaman X / Total", halaman berikutnya >>, zoom +/-, dan mode continuous scroll (opsional).
-   - Lazy-load halaman biar cepat.
-   - Karena signed URL bisa expired saat sesi baca panjang, siapkan mekanisme "refresh signed URL" (panggil ulang /api/get-reader-url) saat load gagal / expired.
-3. PROTEKSI (best-effort, akui keterbatasannya):
-   - Nonaktifkan tombol download & print bawaan viewer.
-   - Disable context menu (klik kanan) di area reader, disable text selection kalau perlu.
-   - JANGAN pernah expose signed URL di UI yang gampang dicopy; render langsung.
-   - Tambahkan watermark tipis overlay berisi email pembeli + "Ling Chinese Lab" di setiap halaman (menempel di layer atas canvas) sebagai deterrent.
-   - Beri komentar jujur di kode: proteksi client-side tidak 100% anti-screenshot; keamanan utama = file di private storage + akses hanya via entitlement + signed URL pendek.
+number
 
-DESAIN:
-- Konsisten dengan brand nude pastel. Toolbar reader minimalis di atas/bawah, sticky. Loading state pakai skeleton. Mobile-friendly (bisa swipe halaman).
-- Header kecil: judul e-book + tombol "Kembali ke Library".
+Mandatory
 
-DELIVERABLE: src/pages/Read.tsx (atau ReaderPage), komponen viewer, integrasi react-pdf + pdf.js worker (set worker via CDN atau bundling agar tetap jalan di Vercel static), penanganan expiry signed URL, watermark overlay, dan proteksi context-menu/print/download. Update package.json dengan dependency baru.
-```
+Order amount in IDR currency and without decimal. 
+Max length: 12
 
----
+order.invoice_number
 
-## Catatan Implementasi Penting (untuk kamu, bukan buat AI)
+string
 
-1. **Webhook Midtrans adalah jantung sistem serverless.** Karena tidak ada server yang "menunggu", Midtrans yang **memanggil** endpoint `/api/midtrans-webhook` kamu saat status berubah. Set URL-nya di dashboard Midtrans → Settings → Configuration → Payment Notification URL: `https://www.lingchineselab.com/api/midtrans-webhook`.
+Mandatory
 
-2. **Upload PDF** dilakukan manual sekali ke bucket private `ebooks` (via dashboard Supabase atau script), lalu isi kolom `products.pdf_path`. PDF **tidak pernah** masuk ke `public/` atau git.
+Unique identifier generated by merchant to identify the order.
 
-3. **Sandbox dulu.** Kembangkan pakai Midtrans Sandbox (`MIDTRANS_IS_PRODUCTION=false`) sebelum ganti ke production key.
+Max length: 64, except credit card which 30 chars only 
 
-4. **Free-tier cukup.** Vercel Hobby + Supabase Free bisa menjalankan ini tanpa biaya server bulanan — benar-benar tanpa VPS.
+If you are using KKI, all the symbols are not allowed. Ensure you do not put any symbol on Invoice number value.
 
-5. **Urutan pengerjaan:** Prompt A (backend + DB) → Prompt B (UI checkout) → Prompt C (reader). Uji tiap tahap sebelum lanjut.
+order.currency
 
-6. **Env vars yang harus diset di Vercel:**
-   `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `MIDTRANS_SERVER_KEY`, `MIDTRANS_IS_PRODUCTION`, dan untuk client: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_MIDTRANS_CLIENT_KEY`. (Opsional: `RESEND_API_KEY`, `WHATSAPP_API_KEY`.)
+string
+
+Optional
+
+3 alphabetic currency code ISO 4217
+Min-max Length: 3
+Default value: IDR
+
+order.callback_url
+
+string
+
+Conditional,
+Mandatory for Payment Methods : Jenius.
+
+The "Back to Merchant" button is configured using the URL provided in callback_url. If only callback_url is set, it will apply to the "Back to Merchant" button on both the main page and the result page. However, if the merchant also sets callback_url_result, then callback_url will only affect the "Back to Merchant" button on the main page, while callback_url_result will specifically affect the button on the result page.
+
+order.callback_url_cancel
+
+string
+
+Conditional,
+Currently only available for payment methods : Indodana
+
+The URL specified for merchant redirection in the event of order cancellation.
+
+order.callback_url_result
+
+string
+
+Optional
+
+The URL designated for button "Back to merchant" in result page. 
+
+order.language
+
+string
+
+Optional
+
+Default language shown when redirect to checkout page
+Max length: 2
+
+order.auto_redirect
+
+boolean
+
+Mandatory
+
+When set to true, the transaction result page redirects to the callback URL; otherwise, it redirects to the payment result page.
+
+order.disable_retry_payment
+
+boolean
+
+Conditional,
+Only applied for payment methods : Credit Card, DOKU Wallet, Akulaku, OVO, ShopeePay
+
+This condition is applicable only when the merchant sends this parameter with a "true" value. If the merchant does not include this parameter, sends a "false" value, or if the customer fails to complete the payment, the result page will be displayed in the Checkout. From there, the customer can retry payment or modify their payment options if multiple channels are available.
+
+order.recover_abandoned_cart
+
+boolean
+
+Conditional, only applicable for VA, O2O, and Credit Card
+
+If you bring this parameter and set as true, your customer can recover their order than has been expired as long as the expired_recover_cart is not due yet.
+
+order.expired_recovered_cart
+
+number
+
+Conditional, only applicable for VA, O2O, and Credit Card
+
+This is the expired time of the order that is already recovered. The expired time's max length is 44640 minutes.
+
+order.line_items.id
+
+string
+
+Conditional
+Mandatory for Payment Methods : Akulaku, Kredivo, Indodana, Allobank
+
+Item ID of the item in this transaction.
+Max Length: 64
+
+Note :
+If you are using KKI, all the symbols are not allowed. Ensure you do not put any symbol on Invoice number value.
+
+order.line_items.name
+
+string
+
+Conditional,
+Mandatory for Payment Methods : Jenius, Kredivo, Indodana, KKI, Akulaku, Allobank
+
+Name of the product item.
+Max Length: 255
+
+Note 
+If you are using KKI, all the symbols are not allowed. Ensure you do not put any symbol.
+
+order.line_items.price
+
+number
+
+Conditional, 
+Mandatory for Payment Methods : Jenius, Kredivo, Akulaku, Indodana, KKI, Allobank
+
+Price of the product item. Total price and quantity must match with the order.amount.
+
+Note 
+If you are using KKI, all the symbols are not allowed. Ensure you do not put any symbol.
+
+order.line_items.quantity
+
+number
+
+Conditional,
+Mandatory for Payment Methods : Jenius, Kredivo, Akulaku, Indodana, KKI, Allobank
+
+Quantity of the product item.
+
+Note 
+If you are using KKI, all the symbols are not allowed. Ensure you do not put any symbol.
+
+order.line_items.sku
+
+string
+
+Conditional.
+Mandatory for Payment Methods : Akulaku, Kredivo, Indodana.
+
+SKU of the product item. 
+
+order.line_items.category
+
+string
+
+Conditional,
+Mandatory for Payment Methods : Akulaku, Kredivo, Indodana.
+
+Category of the product item. For Indodana, the category should be based on these list.
+
+order.line_items.url
+
+string
+
+Conditional,
+Mandatory for Payment Methods : Kredivo 
+
+URL to the product item on merchant site. 
+
+order.line_items.image_url
+
+string
+
+Conditional,
+Mandatory for Payment Methods : Indodana
+
+URL the image of the product item on merchant site.
+
+order.line_items.type
+
+string
+
+Conditional,
+Mandatory for Payment Methods : Indodana, Kredivo
+
+Type of the item in this transaction.
+
+Payment Object
+
+Copy
+"payment": {
+      "payment_due_date": 60,
+      "type" : "SALE/INSTALLMENT/AUTHORIZE",
+      "payment_method_types": [
+          "VIRTUAL_ACCOUNT_BCA",
+          "VIRTUAL_ACCOUNT_BANK_MANDIRI",
+          "VIRTUAL_ACCOUNT_BANK_SYARIAH_MANDIRI",
+          "VIRTUAL_ACCOUNT_DOKU",
+          "VIRTUAL_ACCOUNT_BRI",
+          "VIRTUAL_ACCOUNT_BNI",
+          "VIRTUAL_ACCOUNT_BANK_PERMATA",
+          "VIRTUAL_ACCOUNT_BANK_CIMB",
+          "VIRTUAL_ACCOUNT_BANK_DANAMON",
+          "ONLINE_TO_OFFLINE_ALFA",
+          "CREDIT_CARD",
+          "DIRECT_DEBIT_BRI",
+          "EMONEY_SHOPEEPAY",
+          "EMONEY_OVO",
+          "QRIS",
+          "PEER_TO_PEER_AKULAKU",
+          "PEER_TO_PEER_KREDIVO",
+          "PEER_TO_PEER_INDODANA"
+      ]
+  }
+Body parameter
+Type
+Mandatory
+Description
+payment.payment_method_types
+
+array
+
+optional
+
+Payment method that will shown to users in Checkout Page. 
+If you wish to showcase all available payment methods, simply omit sending this parameter, and all options will be visible. Alternatively, if you prefer to direct users to a specific payment method, include this parameter and specify the desired payment method by filling in its corresponding value.
+The value are listed here.
+
+payment.type
+
+string
+
+Optional
+
+Possible Value :  
+"SALE", "INSTALLMENT", "AUTHORIZE"
+
+If you set the type as Authorize, the status will be stated as On Hold. 
+The status will change, if the customer do payment. 
+
+Only applicable in Credit Card.
+
+payment.payment_due_date
+
+number
+
+optional
+
+The payment due date of the checkout page in minutes. Default : 60 minutes. Max Length: 6
+
+Customer Object
+
+Copy
+"customer":{
+      "id":"JC-01",
+      "name":"Service",
+      "last_name":"Experience",
+      "phone":"628121212121",
+      "email": "sxp@example.com",
+      "address":"Jalan DOKU no 15",
+      "postcode":"120129",
+      "state":"Jakarta",
+      "city":"Jakarta Selatan",
+      "country":"ID"
+}
+Search
+Body parameter
+Type
+Mandatory
+Description
+customer.id
+
+string
+
+Conditional, mandatory to enable tokenized payments (BRI Direct Debit, Allobank, Credit Card tokenization) and Akulaku Paylater.
+
+Unique customer identifier generated by merchant.
+Allowed chars: alphabetic, numeric, special chars
+Max Length: 50
+
+customer.name
+
+string
+
+Conditional,
+mandatory for payment methods Jenius, Akulaku, Indodana, Kredivo
+
+Customer name.
+
+Allowed chars: alphabetic
+Max Length: 255
+
+customer.last_name
+
+string
+
+Optional
+
+Customer last name.
+Max Length: 16
+
+customer.email
+
+string
+
+Conditional,
+mandatory for payment method Indodana, Kredivo, Allobank
+
+Customer email. 
+Allowed chars: alphabetic, numeric, special chars
+Max Length: 128
+
+customer.phone
+
+string
+
+Conditional,
+mandatory for payment method Indodana, Akulaku, Kredivo
+
+Customer phone number. Format: {calling_code}{phone_number}.
+Example: 6281122334455
+Max Length: 16
+
+customer.address
+
+string
+
+Conditional, 
+mandatory for payment method Akulaku
+
+Customer address.
+Allowed chars: alphabetic, numeric, special chars
+Max Length: 400
+
+customer.postcode
+
+string
+
+Conditional,
+mandatory for payment method Akulaku
+
+Customer address' post code
+
+customer.state
+
+string
+
+Conditional,
+mandatory for payment method Akulaku
+
+Customer state or province. 
+
+customer.city
+
+string
+
+Conditional,
+mandatory for payment method Akulaku
+
+Customer address' city
+
+customer.country
+
+string
+
+Optional
+
+2 alphabetic country code ISO 3166-1
+Allowed chars: alphabetic
+Min-max Length: 2
+
+Shipping Address Object
+
+Copy
+"shipping_address":{
+  "first_name":"Service",
+  "last_name":"Experience",
+  "address":"Jalan DOKU no 15",
+  "city":"Jakarta",
+  "postal_code":"11923",
+  "phone":"081312345678",
+  "country_code":"IDN"
+}
+Search
+Body Parameter
+Type
+Mandatory
+Description
+shipping_address.first_name
+
+string
+
+Conditional,
+mandatory for payment method Kredivo and Indodana
+
+Customer's first name used as shipping address
+
+shipping_address.last_name
+
+string
+
+Optional
+
+Customer's last name used as shipping address.
+
+shipping_address.address
+
+string
+
+Conditional,
+mandatory for payment method Kredivo and Indodana
+
+Customer's address used as shipping address.
+
+shipping_address.city
+
+string
+
+Conditional,
+mandatory for payment method Kredivo and Indodana
+
+City of customer's shipping address.
+
+shipping_address.postal_code
+
+string
+
+Conditional,
+mandatory for payment method Kredivo and Indodana
+
+Postal code of customer's shipping address.
+
+shipping_address.phone
+
+string
+
+Conditional,
+mandatory for payment method Kredivo and Indodana
+
+Customer's phone used as shipping address.
+
+shipping_address.country_code
+
+string
+
+Conditional,
+mandatory for payment method Kredivo and Indodana
+
+Country of customer's shipping address.
+
+Billing Address Object
+
+Copy
+"billing_address":{
+  "first_name":"Service",
+  "last_name":"Experience",
+  "address":"Jalan DOKU no 15",
+  "city":"Jakarta",
+  "postal_code":"11923",
+  "phone":"081312345678",
+  "country_code":"IDN"
+}
+Search
+Body Parameter
+Type
+Mandatory
+Description
+billing_address.first_name
+
+string
+
+Conditional,
+mandatory for payment method   Indodana
+
+Customer's first name used as billing address
+
+billing_address.last_name
+
+string
+
+Conditional,
+mandatory for payment method   Indodana
+
+Customer's last name used as billing address.
+
+billing_address.address
+
+string
+
+Conditional,
+mandatory for payment method   Indodana
+
+Customer's address used as billing address.
+
+billing_address.city
+
+string
+
+Conditional,
+mandatory for payment method   Indodana
+
+City of customer's billing address.
+
+billing_address.postal_code
+
+string
+
+Conditional,
+mandatory for payment method   Indodana
+
+Postal code of customer's billing address.
+
+billing_address.phone
+
+string
+
+Conditional,
+mandatory for payment method   Indodana
+
+Customer's phone used as billing address.
+
+billing_address.country_code
+
+string
+
+Conditional,
+mandatory for payment method   Indodana
+
+Country of customer's billing address.
+
+Additional Info Object
+
+Copy
+"additional_info":{
+  "allow_tenor" : [0,3,6,12],
+  "doku_wallet_notify_url" : "https://dw-notification.merchantdomain",
+  "override_notification_url": "https://another.example.com/payments/notifications"
+}
+Body parameter
+Type
+Mandatory
+Description
+additional_info.allow_tenor
+
+number
+
+Optional
+
+The transaction exclusively supports installment tenors as per its current configuration. The allowed values are 0,3,6,12. To hide the "no installment" option, refrain from inputting 0 (zero) in the parameter.
+
+additional_info.doku_wallet_notify_url
+
+string
+
+Conditional, only for payment method DOKU Wallet
+
+Notification url set in this parameter
+
+additional_info.override_notification_url
+
+string
+
+Optional
+
+This parameter is intended to override the configured Notification URL with another URL.  Click here for more information.
+
+Response
+Success Response 
+
+Type
+Value
+HTTP Status
+
+200
+
+
+Basic Response
+
+Full Response
+
+Copy
+{
+    "message": [
+        "SUCCESS"
+    ],
+    "response": {
+        "order": {
+            "amount": "20000",
+            "invoice_number": "INV-20210231-0001",
+            "currency": "IDR",
+            "session_id": "2ebffd22d23e436895ce5c38f7ddcf86"
+        },
+        "payment": {
+            "payment_method_types": [
+                "JENIUS_PAY",
+                "ONLINE_TO_OFFLINE_ALFA",
+                "OCTO_CLICKS",
+                "PEER_TO_PEER_KREDIVO",
+                "VIRTUAL_ACCOUNT_BCA",
+                "CREDIT_CARD",
+                "EMONEY_OVO",
+                "ONLINE_TO_OFFLINE_INDOMARET",
+                "EMONEY_DOKU",
+                "VIRTUAL_ACCOUNT_BANK_MANDIRI",
+                "EPAY_BRI",
+                "PEER_TO_PEER_INDODANA",
+                "VIRTUAL_ACCOUNT_BRI",
+                "EMONEY_LINKAJA",
+                "EMONEY_SHOPEE_PAY",
+                "VIRTUAL_ACCOUNT_BNI",
+                "VIRTUAL_ACCOUNT_BANK_PERMATA",
+                "VIRTUAL_ACCOUNT_DOKU",
+                "VIRTUAL_ACCOUNT_BANK_CIMB",
+                "VIRTUAL_ACCOUNT_BANK_DANAMON",
+                "VIRTUAL_ACCOUNT_BANK_SYARIAH_MANDIRI",
+                "VIRTUAL_ACCOUNT_MAYBANK",
+                "DIRECT_DEBIT_CIMB",
+                "EMONEY_DANA",
+                "DIRECT_DEBIT_BRI",
+                "DIRECT_DEBIT_ALLO",
+                "PEER_TO_PEER_BRI_CERIA",
+                "VIRTUAL_ACCOUNT_BNC",
+                "PERMATA_NET",
+                "KLIKPAY_BCA",
+                "VIRTUAL_ACCOUNT_BTN",
+                "DANAMON_ONLINE_BANKING",
+                "VIRTUAL_ACCOUNT_SINARMAS"
+            ],
+            "payment_due_date": 60,
+            "token_id": "2ebffd22d23e436895ce5c38f7ddcf8620244712094712362",
+            "url": "https://sandbox.doku.com/checkout-link-v2/2ebffd22d23e436895ce5c38f7ddcf8620244712094712362",
+            "expired_date": "20240712104711"
+        },
+        "additional_info": {
+            "origin": {
+                "product": "CHECKOUT",
+                "system": "mid-jokul-checkout-system",
+                "apiFormat": "JOKUL",
+                "source": "direct"
+            }
+        },
+        "uuid": 2225240712094712339107164227041411929328,
+        "headers": {
+            "request_id": "ed06da30-bbbc-4e90-a3c7-390c24476cb9",
+            "signature": "HMACSHA256=cyoua5cA6DR5mG/4vw3ice48KjCX+CGdLdSfMumJUuo=",
+            "date": "2024-07-12T02:47:11Z",
+            "client_id": "BRN-0214-1714016624673"
+        }
+    }
+}
+Response Body Explanation
+
+Search
+Body Parameter
+Type
+Mandatory
+Description
+message
+
+array
+
+Mandatory
+
+Message will display the result of the request. If there are some errors on your request, they will be diplayed in this parameter.
+
+response.order.amount
+
+number
+
+Mandatory
+
+Same as the request 
+
+response.order.invoice_number
+
+string
+
+Mandatory
+
+Same as the request 
+
+response.order.currency
+
+string
+
+Optional
+
+Same as the request  
+
+response.order.session_id
+
+string
+
+Optional
+
+Unique session ID generated by DOKU
+
+response.order.callback_url
+
+string
+
+Optional
+
+Same as the request
+
+response.order.callback_url_cancel
+
+string
+
+Optional
+
+Same as the request
+
+response.order.recover_abandoned_cart
+
+boolean
+
+Conditional
+
+Same as the request
+
+response.order.expired_recovered_cart
+
+number
+
+Conditional
+
+Same as the request
+
+response.order.line_items.name
+
+string
+
+Optional
+
+Same as the request
+
+response.order.line_items.quantity
+
+number
+
+Optional
+
+Same as the request
+
+response.order.line_items.price
+
+number
+
+Optional
+
+Same as the request
+
+response.order.line_items.sku
+
+string
+
+Optional
+
+Same as the request
+
+response.order.line_items.category
+
+string
+
+Optional
+
+Same as the request
+
+response.order.line_items.url
+
+string
+
+Optional
+
+Same as the request
+
+response.order.line_items.image_url
+
+string
+
+Optional
+
+Same as the request
+
+response.order.line_items.type
+
+string
+
+Optional
+
+Same as the request
+
+response.order.language
+
+string
+
+Optional
+
+Same as the request
+
+response.order.disable_retry_payment
+
+boolean
+
+Optional
+
+Same as the request
+
+response.order.auto_redirect
+
+boolean
+
+Optional
+
+Same as the request
+
+response.payment.payment_method_types
+
+array
+
+Optional
+
+Payment method that will be displayed on the Checkout Page
+
+response.payment.payment_due_date
+
+number
+
+Mandatory
+
+Same as the request
+
+response.payment.token_id
+
+string
+
+Mandatory
+
+Token generated by DOKU for the Checkout Page
+
+response.payment.url
+
+string
+
+Mandatory
+
+Checkout page URL to display for the customer
+
+response.payment.expired_date
+
+string
+
+Mandatory
+
+Date time of payment page will be expired with the format of yyyyMMddHHmmss. The expired date uses UTC+7 time. Use this to set the expiry order on merchant side
+
+response.customer.id
+
+string
+
+Optional
+
+Same as the request
+
+response.customer.state
+
+string
+
+Optional
+
+Same as the request
+
+response.customer.city
+
+string
+
+Optional
+
+Same as the request
+
+response.customer.postcode
+
+string
+
+Optional
+
+Same as the request
+
+response.customer.email
+
+string
+
+Optional
+
+Same as the request
+
+response.customer.phone
+
+string
+
+Optional
+
+Same as the request
+
+response.customer.name
+
+string
+
+Optional
+
+Same as the request
+
+response.customer.last_name
+
+string
+
+Optional
+
+Same as the request
+
+response.customer.address
+
+string
+
+Optional
+
+Same as the request
+
+response.customer.country
+
+string
+
+Optional
+
+Same as the request
+
+response.additional_info.allow_tenor
+
+string
+
+Optional
+
+Same as the request
+
+response.additional_info.close_redirect
+
+string
+
+Optional
+
+Same as the request
+
+response.additional_info.doku_wallet_notify_url
+
+string
+
+Optional
+
+Same as the request
+
+response.additional_info.override_notification_url
+
+string
+
+Optional
+
+Same as the request
+
+response.uuid
+
+string
+
+Optional
+
+Unique number generated by DOKU
+
+response.headers.requestId
+
+string
+
+Optional
+
+Same as the request
+
+response.headers.signature
+
+string
+
+Optional
+
+Same as the request
+
+response.headers.date
+
+string
+
+Optional
+
+Same as the request
+
+response.headers.clientId
+
+string
+
+Optional
+
+Same as the request
+
+response.shipping_address.address
+
+string
+
+Optional
+
+Same as the request
+
+response.shipping_address.city
+
+string
+
+Optional
+
+Same as the request
+
+response.shipping_address.phone
+
+string
+
+Optional
+
+Same as the request
+
+response.shipping_address.first_name
+
+string
+
+Optional
+
+Same as the request
+
+response.shipping_address.last_name
+
+string
+
+Optional
+
+Same as the request
+
+response.shipping_address.postal_code
+
+string
+
+Optional
+
+Same as the request
+
+response.shipping_address.country_code
+
+string
+
+Optional
+
+Same as the request
+
+response.billing_address.address
+
+string
+
+Optional
+
+Same as the request
+
+response.billing_address.city
+
+string
+
+Optional
+
+Same as the request
+
+response.billing_address.phone
+
+string
+
+Optional
+
+Same as the request
+
+response.billing_address.first_name
+
+string
+
+Optional
+
+Same as the request
+
+response.billing_address.first_name
+
+string
+
+Optional
+
+Same as the request
+
+response.billing_address.postal_code
+
+string
+
+Optional
+
+Same as the request
+
+response.billing_address.country_code
+
+string
+
+Optional
+
+Same as the request
+
+Failed Response
+
+Type
+Value
+HTTP Status
+
+400
+
+
+Copy
+{
+    "error_messages": [
+        "order.invoice_number must be filled",
+        "order.amount must greater than 0"
+    ]
+}
+List Category
+List category can be used as reference. But this is part of payment channel Indodana with mandatory value need to set in order.line_items.category.
+
+Search
+No
+Category
+1
+
+airlines
+
+2
+
+arts-crafts-and-collectibles
+
+3
+
+automotive
+
+4
+
+baby
+
+5
+
+beauty-and-fragrances
+
+6
+
+biller
+
+7
+
+books-and-magazines
+
+8
+
+business-to-business-including-mlm
+
+9
+
+charity-and-non-profit
+
+10
+
+clothing
+
+11
+
+community
+
+12
+
+digital-content
+
+13
+
+electronics-and-telecom
+
+14
+
+entertainment-and-media
+
+15
+
+fee
+
+16
+
+financial-services-and-products
+
+17
+
+financial-services-and-technology
+
+18
+
+food-and-beverage
+
+19
+
+food-retail-and-service
+
+20
+
+games-voucher
+
+21
+
+gifts-and-flowers
+
+22
+
+government
+
+23
+
+health-and-personal-care
+
+24
+
+home-and-garden
+
+25
+
+hotel-and-travel
+
+26
+
+insurance
+
+27
+
+marketplace
+
+28
+
+nonprofit
+
+29
+
+offline-store
+
+30
+
+others
+
+31
+
+over-the-air
+
+32
+
+overseas
+
+33
+
+pets-and-animals
+
+34
+
+property
+
+35
+
+public-services
+
+36
+
+religion-and-spirituality
+
+37
+
+retail
+
+38
+
+services
+
+39
+
+sports-and-outdoors
+
+40
+
+telco
+
+41
+
+ticketing
+
+42
+
+toys-and-hobbies
+
+43
+
+transportation
+
+45
+
+travel
+
+46
+
+vehicle-sales
+
+47
+
+vehicles-service-and-accessories
+
+
+
+Frontend Integration
+Frontend Integration to display DOKU Checkout Page
+The aim of integrating the frontend is to present the DOKU Checkout payment page seamlessly within your website.
+
+Once you have the payment.url, you can now display the payment page by embedding the DOKU Checkout JS on your HTML file.
+
+DOKU Checkout js location
+Simply import the jokul-checkout-1.0.0.js and then call the loadJokulCheckout() with the payment.url:
+
+Type
+Value
+JS (sandbox)
+
+https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js
+
+JS (production)
+
+https://jokul.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js
+
+VIEWPORT
+
+The viewport on the <head> tag is important to ensure that the payment page is load correctly.
+
+
+Copy
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js"></script>
+    </head>
+    <body>
+        <button id="checkout-button">Checkout Now</button>
+
+        <script type="text/javascript">
+        var checkoutButton = document.getElementById('checkout-button');
+        // Example: the payment page will show when the button is clicked
+        checkoutButton.addEventListener('click', function () {
+            loadJokulCheckout('https://jokul.doku.com/checkout/link/SU5WFDferd561dfasfasdfae123c20200510090550775'); // Replace it with the response.payment.url you retrieved from the response
+        });
+        </script>
+    </body>
+</html>
+There are 2 approaches for integrating the DOKU Checkout page into your web/app interface. 
+
+Redirect customer to a new page.
+
+Use the payment.urlvalue without importing the JS file
+
+Present it as modal overlay (pop-up mode)
+
+Kindly importing the JS file as the sample attached above
+
+Simulate payment and Notification
+Create payment simulation
+Create a test payment to make sure that the DOKU Checkout has been successfully integrated. Simply initiate the payment from your page and then make the payment from our Simulator.
+
+Click here to access our payment simulator
+
+After the payment is completed, your customers will be redirected to callback_url that defined in the request.
+
+Acknowledge payment result
+After the payment is being made by your customer, DOKU will send HTTP Notification to your defined Notification URL. Learn how to handle the notification from DOKU here. 
+

@@ -185,14 +185,13 @@ const HeroSection = () => {
 
               <Button
                 size="lg"
-                disabled
-                className="relative py-5 md:py-8 lg:px-6 w-full md:w-auto sm:min-w-[220px] flex-1 rounded-full bg-muted text-muted-foreground shadow-none cursor-not-allowed border-2 border-border opacity-80"
+                onClick={() => navigate('/store')}
+                className="relative py-5 md:py-8 lg:px-6 w-full md:w-auto sm:min-w-[220px] flex-1 rounded-full bg-secondary text-secondary-foreground shadow-lg hover:bg-secondary/90 border-2 border-transparent"
               >
                 <span className="flex w-full items-center justify-center gap-2">
-                  <BookOpen className="size-5 sm:size-7 shrink-0 opacity-50" />
-                  <p className="text-sm sm:text-lg font-bold whitespace-nowrap opacity-90">
-                    <span className="hidden lg:inline xl:hidden">E-BOOK COMING SOON</span>
-                    <span className="inline lg:hidden xl:inline">E-BOOK: COMING SOON</span>
+                  <BookOpen className="size-5 sm:size-7 shrink-0" />
+                  <p className="text-sm sm:text-lg font-bold whitespace-nowrap">
+                    Beli E-Book
                   </p>
                 </span>
               </Button>

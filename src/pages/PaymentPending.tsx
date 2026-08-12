@@ -63,7 +63,7 @@ export default function PaymentPending() {
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-2">Menunggu Pembayaran</h2>
             <p className="text-muted-foreground mb-8">
-              Mohon selesaikan pembayaran Anda di jendela Midtrans. Halaman ini akan otomatis diperbarui.
+              Mohon selesaikan pembayaran Anda di halaman Doku. Halaman ini akan otomatis diperbarui.
             </p>
             <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded-full">
               <Clock className="w-4 h-4" />

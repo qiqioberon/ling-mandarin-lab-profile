@@ -37,22 +37,22 @@ export default function Checkout() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isOwned, setIsOwned] = useState(false);
 
-  // Load Midtrans Snap
+  // Load Doku Jokul Checkout Script
   useEffect(() => {
-    const snapScript = "https://app.sandbox.midtrans.com/snap/snap.js";
-    const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
+    const isProd = import.meta.env.VITE_DOKU_IS_PRODUCTION === 'true';
+    const scriptUrl = isProd 
+      ? "https://jokul.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js"
+      : "https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js";
     
-    // Check if script already exists
-    let script = document.querySelector(`script[src="${snapScript}"]`);
-    
+    let script = document.querySelector(`script[src="${scriptUrl}"]`);
     if (!script) {
       script = document.createElement("script");
-      script.src = snapScript;
-      script.setAttribute("data-client-key", clientKey || "");
+      script.src = scriptUrl;
       script.async = true;
       document.body.appendChild(script);
     }
   }, []);
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -128,31 +128,23 @@ export default function Checkout() {
 
       const data = await res.json();
       
-      if (data.snapToken === 'MOCK-TOKEN-123') {
+      if (data.paymentUrl === 'MOCK-URL-123') {
         toast.success("Mode Lokal: Checkout berhasil (Simulasi)");
         navigate(`/payment/pending?orderRef=${data.orderRef}`);
         return;
       }
 
-      if (data.snapToken && (window as any).snap) {
-        (window as any).snap.pay(data.snapToken, {
-          onSuccess: function (result: any) {
-            navigate(`/payment/pending?orderRef=${data.orderRef}`);
-          },
-          onPending: function (result: any) {
-            navigate(`/payment/pending?orderRef=${data.orderRef}`);
-          },
-          onError: function (result: any) {
-            toast.error('Pembayaran gagal atau dibatalkan');
-            setIsProcessing(false);
-          },
-          onClose: function () {
-            toast.info('Popup pembayaran ditutup tanpa menyelesaikan pembayaran');
-            setIsProcessing(false);
-          }
-        });
+      if (data.paymentUrl) {
+        if (typeof (window as any).loadJokulCheckout === 'function') {
+          // Gunakan modal overlay pop-up
+          (window as any).loadJokulCheckout(data.paymentUrl);
+        } else {
+          // Fallback: redirect langsung
+          toast.loading('Mengarahkan ke halaman pembayaran...');
+          window.location.href = data.paymentUrl;
+        }
       } else {
-        throw new Error('Snap Token tidak ditemukan atau Snap belum dimuat');
+        throw new Error('Gagal mendapatkan link pembayaran dari Doku');
       }
 
     } catch (error: any) {
@@ -318,7 +310,7 @@ export default function Checkout() {
 
               <div className="flex items-center gap-3 text-xs text-muted-foreground justify-center mt-6">
                 <ShieldCheck className="w-4 h-4 text-green-600" />
-                <span>Pembayaran aman via Midtrans (QRIS, Transfer, e-Wallet)</span>
+                <span>Pembayaran aman via Doku (QRIS, VA, e-Wallet)</span>
               </div>
               
               {!isOwned && (
