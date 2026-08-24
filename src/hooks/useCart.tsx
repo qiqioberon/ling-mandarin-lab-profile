@@ -27,7 +27,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const saved = sessionStorage.getItem('cart_item');
     if (saved) {
       try {
-        setItem(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (parsed) {
+          if (!parsed.cover_url) parsed.cover_url = '/coverling.png';
+          if (parsed.title?.includes('Uji QRIS') || parsed.title?.includes('Rahasia Huruf')) {
+            parsed.title = 'E-Book Ling Chinese Lab Volume I';
+          }
+          setItem(parsed);
+        }
       } catch (e) {
         console.error("Failed to parse cart item");
       }

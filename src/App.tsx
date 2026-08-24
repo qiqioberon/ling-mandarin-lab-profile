@@ -15,6 +15,9 @@ import { CartProvider } from "./hooks/useCart";
 import { AuthProvider } from "./hooks/useAuth";
 import { CartSheet } from "./components/store/CartSheet";
 
+import Terms from "./pages/Terms";
+import RefundPolicy from "./pages/RefundPolicy";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -35,6 +38,9 @@ const App = () => (
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/payment/pending" element={<PaymentPending />} />
               <Route path="/library" element={<Library />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/refund-policy" element={<RefundPolicy />} />
+              <Route path="/legal" element={<Terms />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
@@ -43,5 +49,6 @@ const App = () => (
     </TooltipProvider>
   </QueryClientProvider>
 );
+
 
 export default App;
