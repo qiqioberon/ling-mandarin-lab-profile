@@ -55,13 +55,11 @@ export function CartSheet() {
           ) : (
             <div className="flex flex-col gap-4">
               <div className="flex gap-4 items-start">
-                {item.cover_url ? (
-                  <img src={item.cover_url} alt={item.title} className="w-20 h-28 object-cover rounded-md border" />
-                ) : (
-                  <div className="w-20 h-28 bg-muted rounded-md border flex items-center justify-center">
-                    PDF
-                  </div>
-                )}
+                <img 
+                  src={item.cover_url || '/coverling.png'} 
+                  alt={item.title} 
+                  className="w-20 h-28 object-cover rounded-md border shadow-sm" 
+                />
                 
                 <div className="flex-1">
                   <h4 className="font-semibold text-foreground line-clamp-2">{item.title}</h4>

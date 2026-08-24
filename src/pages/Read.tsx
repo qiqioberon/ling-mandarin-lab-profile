@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { ZoomIn, ZoomOut, BookOpen, Scroll, ChevronLeft, Bookmark, Sparkles, Lock, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabase';
 import QuizModal, { QUIZ_DATABASE, QUIZ_TITLES } from '@/components/reader/QuizModal';
 import { Input } from '@/components/ui/input';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -55,9 +56,16 @@ export default function Read() {
   
   const { user } = useAuth();
   const buyerEmail = user?.email || "Tamu / Guest"; 
-  const displayTitle = slug === 'test' ? 'Rahasia Huruf Mandarin (Vol. 1)' : slug;
+  const displayTitle = slug === 'test' ? 'E-Book Ling Chinese Lab Volume I' : slug;
   
-  const flipBookRef = useRef<any>(null);
+  type FlipBookApi = {
+    pageFlip: () => {
+      turnToPage: (page: number) => void;
+      flipNext: () => void;
+      flipPrev: () => void;
+    };
+  };
+  const flipBookRef = useRef<FlipBookApi | null>(null);
 
   useEffect(() => {
     // Responsive otomatis
@@ -99,23 +107,36 @@ export default function Read() {
     const fetchUrl = async () => {
       try {
         setLoading(true);
-        const productId = slug === 'test' ? 'test-katalog' : slug;
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        const isGuestMode = localStorage.getItem('demo_guest_email') || slug === 'test' || !token;
+
+        if (isGuestMode) {
+          setPdfUrl('/preview-katalog.pdf');
+          setLoading(false);
+          return;
+        }
         
         const res = await fetch('/api/get-reader-url', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId, email: buyerEmail })
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({ slug })
         });
         
         if (!res.ok) {
           const err = await res.json();
-          throw new Error(err.error || 'Failed to get PDF URL');
+          // Fallback to preview PDF if testing locally or demo
+          setPdfUrl('/preview-katalog.pdf');
+          return;
         }
         
         const data = await res.json();
         setPdfUrl(data.signedUrl);
-      } catch (err: any) {
-        toast.error(err.message);
+      } catch (err) {
+        setPdfUrl('/preview-katalog.pdf');
       } finally {
         setLoading(false);
       }
@@ -438,8 +459,8 @@ export default function Read() {
               </Button>
 
               <div className="flex justify-center shadow-2xl relative shrink-0">
-                {/* @ts-ignore */}
-                <HTMLFlipBook 
+                {/* @ts-expect-error HTMLFlipBook from react-pageflip lacks complete TS types */}
+                <HTMLFlipBook
                   width={bookDim.width} 
                   height={bookDim.height} 
                   size="fixed"
@@ -449,7 +470,7 @@ export default function Read() {
                   mobileScrollSupport={false}
                   useMouseEvents={true}
                   usePortrait={isSinglePageFlip} // Boleh portrait (1 halaman) sesuai state
-                  onFlip={(e: any) => handlePageChange(e.data + 1)}
+                  onFlip={(e: { data: number }) => handlePageChange(e.data + 1)}
                   ref={flipBookRef}
                   className="bg-transparent"
                   style={{ margin: '0 auto' }}

@@ -24,6 +24,9 @@ import ellenCertificate from "@/assets/Laoshi/Ellen/ellen_certificate.pdf";
 import jaxineTocfl from "@/assets/Laoshi/Jaxine/JAXINE - Chinese Language Proficiency - TOCFL.pdf";
 import oliviaTocfl1 from "@/assets/Laoshi/Olivia/olivia_tocfl_1.jpeg";
 import oliviaTocfl2 from "@/assets/Laoshi/Olivia/olivia_tocfl_2.jpeg";
+import audreyHsk from "@/assets/Laoshi/Audrey/audreyHSK5.pdf";
+import audreyTocfl from "@/assets/Laoshi/Audrey/audreytocfl.jpeg";
+
 
 const icons = {
   0: TrendingUp,
@@ -150,6 +153,22 @@ const certificates: Certificate[] = [
     preview: oliviaTocfl2,
     mentor: "Laoshi Olivia",
     description: "TOCFL Certificate 2",
+    type: "TOCFL" as CertificateType,
+    previewType: "image"
+  },
+  {
+    src: audreyHsk,
+    preview: audreyHsk,
+    mentor: "Audrey Laoshi",
+    description: "HSK 5 Certificate",
+    type: "HSK" as CertificateType,
+    previewType: "pdf"
+  },
+  {
+    src: audreyTocfl,
+    preview: audreyTocfl,
+    mentor: "Audrey Laoshi",
+    description: "TOCFL B1 Certificate",
     type: "TOCFL" as CertificateType,
     previewType: "image"
   }

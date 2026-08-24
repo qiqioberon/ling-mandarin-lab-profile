@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useCart, CartItem } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, CheckCircle2, Volume2, VolumeX } from 'lucide-react';
+import { ShoppingCart, BookOpen, CheckCircle2, Volume2, VolumeX } from 'lucide-react';
 import { toast } from 'sonner';
 import ebookvid from '@/assets/Phone/ebookvid.mp4';
 
@@ -21,13 +22,14 @@ type Product = {
 const mockProduct: Product = {
   id: "mock-123",
   slug: "test-katalog",
-  title: "E-Book: Rahasia Huruf Mandarin (Vol. 1)",
+  title: "E-Book Ling Chinese Lab Volume I",
   description: "Buku panduan komprehensif menguasai dasar-dasar huruf Mandarin (Hanzi). Cocok pemula–menengah, 10 unsur radikal, Step menulis, Latihan soal + kunci.",
   price: 60000,
   cover_url: "/coverling.png"
 };
 
 export default function Store() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { addToCart, setIsCartOpen } = useCart();
@@ -50,7 +52,7 @@ export default function Store() {
           // Jika kosong, pakai mock untuk testing UI
           setProducts([mockProduct]);
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error("Error fetching products:", err);
         setProducts([mockProduct]); // Fallback ke mock
       } finally {
@@ -99,14 +101,25 @@ export default function Store() {
             <p className="text-[#6A2B2B]/70 mt-2 text-lg font-medium">Ling Chinese Lab</p>
           </div>
           
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="w-12 h-12 relative bg-white border-[#6A2B2B]/20 hover:bg-[#6A2B2B]/5 hover:border-[#6A2B2B]/30 transition-colors shadow-sm"
-            onClick={() => setIsCartOpen(true)}
-          >
-            <ShoppingCart className="w-6 h-6 text-[#6A2B2B]" />
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline" 
+              className="h-12 px-4 gap-2 bg-white border-[#6A2B2B]/20 text-[#6A2B2B] hover:bg-[#6A2B2B]/5 font-semibold shadow-sm rounded-xl"
+              onClick={() => navigate('/library')}
+            >
+              <BookOpen className="w-5 h-5 text-[#6A2B2B]" />
+              <span className="hidden sm:inline">Library Saya</span>
+            </Button>
+
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="w-12 h-12 relative bg-white border-[#6A2B2B]/20 hover:bg-[#6A2B2B]/5 hover:border-[#6A2B2B]/30 transition-colors shadow-sm rounded-xl"
+              onClick={() => setIsCartOpen(true)}
+            >
+              <ShoppingCart className="w-6 h-6 text-[#6A2B2B]" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -147,7 +160,7 @@ export default function Store() {
               E-BOOK TERBARU
             </div>
             <h2 className="text-3xl md:text-5xl font-black text-foreground leading-tight">
-              Rahasia Huruf Mandarin <span className="text-[#6A2B2B]">(Vol. 1)</span>
+              E-Book Ling Chinese Lab <span className="text-[#6A2B2B]">Volume I</span>
             </h2>
             <p className="text-lg text-muted-foreground leading-relaxed">
               Buku panduan komprehensif menguasai dasar-dasar huruf Mandarin (Hanzi). Dirancang khusus dengan metode yang terstruktur agar proses belajar menjadi lebih mudah, cepat, dan menyenangkan.
@@ -188,14 +201,11 @@ export default function Store() {
                   <Badge className="absolute top-4 right-4 bg-[#6A2B2B] text-white hover:bg-[#522121] shadow-md border-none px-3 py-1 font-bold tracking-wide z-10">
                     BEST SELLER
                   </Badge>
-                  {product.cover_url ? (
-                    <img src={product.cover_url} alt={product.title} className="w-full h-full object-cover rounded-xl shadow-md group-hover:scale-[1.02] transition-transform duration-500" />
-                  ) : (
-                    <div className="w-full h-full bg-[#f4efe9] rounded-xl shadow-inner flex flex-col items-center justify-center text-[#6A2B2B]/30 border-2 border-dashed border-[#6A2B2B]/20">
-                      <span className="text-2xl font-black tracking-widest uppercase">E-Book</span>
-                      <span className="mt-3 text-sm font-medium text-center px-6">{product.title}</span>
-                    </div>
-                  )}
+                  <img 
+                    src={product.cover_url || '/coverling.png'} 
+                    alt={product.title} 
+                    className="w-full h-full object-cover rounded-xl shadow-md group-hover:scale-[1.02] transition-transform duration-500" 
+                  />
                 </div>
                 
                 <div className="p-6 flex flex-col flex-1 bg-white">

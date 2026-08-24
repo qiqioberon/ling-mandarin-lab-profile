@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, ArrowDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { programs } from "@/data/programs";
 import { whatsappUrl } from "@/data/stats";
@@ -45,13 +45,13 @@ const ProgramsSection = () => {
             </span>
           </h3>
           <p className="text-lg text-muted-foreground">
-            Pilih level yang sesuai dengan kemampuan Anda. Setiap program dirancang untuk hasil maksimal.
+            Pilih level yang sesuai dengan kemampuan Anda. Setiap program dirancang untuk hasil maksimal bagi kebutuhan dan masa depan Anda!
           </p>
         </div>
 
         {/* Komparasi Terpadu: Simplified vs Traditional */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          
+
           {/* China / Simplified Card */}
           <div className="bg-white rounded-3xl shadow-sm border border-red-100 overflow-hidden flex flex-col hover:shadow-md transition-shadow">
             <div className="bg-red-50 p-6 flex items-center gap-4 border-b border-red-100">
@@ -61,7 +61,7 @@ const ProgramsSection = () => {
                 <p className="text-sm font-semibold text-foreground/70">Simplified / 简体字 (jiǎn tǐ zì)</p>
               </div>
             </div>
-            
+
             <div className="p-6 flex-1 flex flex-col gap-8">
               {/* Karakteristik */}
               <div>
@@ -100,9 +100,9 @@ const ProgramsSection = () => {
                 <div className="bg-red-50/50 rounded-2xl p-4 border border-red-100/50 flex flex-col items-center justify-center text-center">
                   <h4 className="text-xs font-bold text-[#E63946]/80 uppercase tracking-wider mb-2">Alur</h4>
                   <p className="font-semibold text-sm mb-1 text-foreground/80">Mau China?</p>
-                  <div className="w-0.5 h-3 bg-red-300 mb-1 rounded-full"></div>
+                  <ArrowDown className="w-4 h-4 text-red-400 mb-1" />
                   <div className="font-bold text-[#E63946] text-sm mb-1">Ujian HSK</div>
-                  <div className="w-0.5 h-3 bg-red-300 mb-1 rounded-full"></div>
+                  <ArrowDown className="w-4 h-4 text-red-400 mb-1" />
                   <p className="font-bold text-sm text-foreground/90">Berbisnis</p>
                 </div>
               </div>
@@ -137,7 +137,7 @@ const ProgramsSection = () => {
                 <p className="text-sm font-semibold text-foreground/70">Traditional / 繁體字 (fán tǐ zì)</p>
               </div>
             </div>
-            
+
             <div className="p-6 flex-1 flex flex-col gap-8">
               {/* Karakteristik */}
               <div>
@@ -176,9 +176,9 @@ const ProgramsSection = () => {
                 <div className="bg-blue-50/50 rounded-2xl p-4 border border-blue-100/50 flex flex-col items-center justify-center text-center">
                   <h4 className="text-xs font-bold text-blue-600/80 uppercase tracking-wider mb-2">Alur</h4>
                   <p className="font-semibold text-sm mb-1 text-foreground/80">Mau Taiwan?</p>
-                  <div className="w-0.5 h-3 bg-blue-300 mb-1 rounded-full"></div>
+                  <ArrowDown className="w-4 h-4 text-blue-400 mb-1" />
                   <div className="font-bold text-blue-600 text-sm mb-1">Ujian TOCFL</div>
-                  <div className="w-0.5 h-3 bg-blue-300 mb-1 rounded-full"></div>
+                  <ArrowDown className="w-4 h-4 text-blue-400 mb-1" />
                   <p className="font-bold text-sm text-foreground/90">Keseharian Taiwan</p>
                 </div>
               </div>
@@ -231,37 +231,37 @@ const ProgramsSection = () => {
                   <td className="p-4 font-bold text-center">C2</td>
                   <td className="p-4 font-medium">Sangat Mahir / Mastery</td>
                   <td className="p-4 text-center font-bold text-foreground/80 bg-red-50/30">HSK 9</td>
-                  <td className="p-4 text-center bg-blue-50/30">Level 6 (Band C)<br/><span className="text-xs text-muted-foreground">精通級 (Mastery)</span></td>
+                  <td className="p-4 text-center bg-blue-50/30">Level 6 (Band C)<br /><span className="text-xs text-muted-foreground">精通級 (Mastery)</span></td>
                 </tr>
                 <tr className="hover:bg-muted/10 transition-colors">
                   <td className="p-4 font-bold text-center">C1</td>
                   <td className="p-4 font-medium">Mahir / Advanced</td>
                   <td className="p-4 text-center font-bold text-foreground/80 bg-red-50/30">HSK 7 - 8</td>
-                  <td className="p-4 text-center bg-blue-50/30">Level 5 (Band C)<br/><span className="text-xs text-muted-foreground">流利級 (Fluent)</span></td>
+                  <td className="p-4 text-center bg-blue-50/30">Level 5 (Band C)<br /><span className="text-xs text-muted-foreground">流利級 (Fluent)</span></td>
                 </tr>
                 <tr className="hover:bg-muted/10 transition-colors">
                   <td className="p-4 font-bold text-center">B2</td>
                   <td className="p-4 font-medium">Menengah Atas / Upper-Inter</td>
                   <td className="p-4 text-center font-bold text-foreground/80 bg-red-50/30">HSK 6</td>
-                  <td className="p-4 text-center bg-blue-50/30">Level 4 (Band B)<br/><span className="text-xs text-muted-foreground">高階級 (Advanced)</span></td>
+                  <td className="p-4 text-center bg-blue-50/30">Level 4 (Band B)<br /><span className="text-xs text-muted-foreground">高階級 (Advanced)</span></td>
                 </tr>
                 <tr className="hover:bg-muted/10 transition-colors">
                   <td className="p-4 font-bold text-center">B1</td>
                   <td className="p-4 font-medium">Menengah / Intermediate</td>
                   <td className="p-4 text-center font-bold text-foreground/80 bg-red-50/30">HSK 4 - 5</td>
-                  <td className="p-4 text-center bg-blue-50/30">Level 3 (Band B)<br/><span className="text-xs text-muted-foreground">進階級 (Vantage)</span></td>
+                  <td className="p-4 text-center bg-blue-50/30">Level 3 (Band B)<br /><span className="text-xs text-muted-foreground">進階級 (Vantage)</span></td>
                 </tr>
                 <tr className="hover:bg-muted/10 transition-colors">
                   <td className="p-4 font-bold text-center">A2</td>
                   <td className="p-4 font-medium">Dasar / Elementary</td>
                   <td className="p-4 text-center font-bold text-foreground/80 bg-red-50/30">HSK 2 - 3</td>
-                  <td className="p-4 text-center bg-blue-50/30">Level 2 (Band A)<br/><span className="text-xs text-muted-foreground">基礎級 (Waystage)</span></td>
+                  <td className="p-4 text-center bg-blue-50/30">Level 2 (Band A)<br /><span className="text-xs text-muted-foreground">基礎級 (Waystage)</span></td>
                 </tr>
                 <tr className="hover:bg-muted/10 transition-colors">
                   <td className="p-4 font-bold text-center">A1</td>
                   <td className="p-4 font-medium">Pemula / Beginner</td>
                   <td className="p-4 text-center font-bold text-foreground/80 bg-red-50/30">HSK 1</td>
-                  <td className="p-4 text-center bg-blue-50/30">Level 1 (Band A)<br/><span className="text-xs text-muted-foreground">入門級 (Breakthrough)</span></td>
+                  <td className="p-4 text-center bg-blue-50/30">Level 1 (Band A)<br /><span className="text-xs text-muted-foreground">入門級 (Breakthrough)</span></td>
                 </tr>
               </tbody>
             </table>
@@ -296,20 +296,20 @@ const ProgramsSection = () => {
         </div>
 
         {/* CTA */}
-        <div className="text-center space-y-6 max-w-2xl mx-auto">
+        <div className="text-center mt-8 max-w-3xl mx-auto w-full">
           <Card className="border-primary/20 bg-muted/30">
-            <CardContent className="py-8">
-              <p className="text-muted-foreground mb-4">
+            <CardContent className="p-6 sm:p-8 flex flex-col items-center justify-center">
+              <p className="text-sm sm:text-base text-muted-foreground mb-6">
                 Info: Harga dan jadwal dikirimkan secara personal via WhatsApp
               </p>
               <Button
                 size="lg"
                 onClick={handleWhatsappClick}
-                className="relative py-5 md:py-8 lg:px-6 w-full md:w-auto sm:min-w-[260px] md:min-w-[400px]  flex-1 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
+                className="relative py-6 sm:py-8 w-full max-w-[280px] sm:max-w-[400px] rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
               >
                 <span className="flex w-full items-center justify-center gap-2">
-                  <img src={whatsappIcon} alt="WhatsApp" className="size-7" />
-                  <p className="text-base sm:text-lg">Tanya Program Lewat Whatsapp</p>
+                  <img src={whatsappIcon} alt="WhatsApp" className="size-6 sm:size-7" />
+                  <p className="text-sm sm:text-lg font-bold">Tanya Program via WA</p>
                 </span>
               </Button>
             </CardContent>

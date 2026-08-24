@@ -42,6 +42,10 @@ import schoolUph from "@/assets/School/UPH.svg";
 import taiyaPhoto from "@/assets/Laoshi/Taiya/taiya.svg";
 import taiyaHsk1 from "@/assets/Laoshi/Taiya/HSK6_1.jpeg";
 import taiyaHsk2 from "@/assets/Laoshi/Taiya/HSK6_2.pdf";
+import audreyPhoto from "@/assets/Laoshi/Audrey/audrey.svg";
+import audreyHsk from "@/assets/Laoshi/Audrey/audreyHSK5.pdf";
+import audreyTocfl from "@/assets/Laoshi/Audrey/audreytocfl.jpeg";
+
 
 export interface TeacherCertificate {
   label: string;
@@ -274,6 +278,23 @@ export const teachers: Teacher[] = [
     certificates: [
       { label: "HSK 6 (1) - Janice", file: taiyaHsk1, type: "image" },
       { label: "HSK 6 (2) - Janice", file: taiyaHsk2, type: "pdf" }
+    ]
+  },
+  {
+    id: 13,
+    name: "Audrey",
+    mandarinName: "劉如玉 Audrey Laoshi",
+    location: "Online",
+    schools: [schoolOptions.nkust],
+    education: educationText([schoolOptions.nkust]),
+    photo: audreyPhoto,
+    degree: "Sertifikasi HSK 5 & TOCFL B1",
+    xinzhongBackground: "Lulusan National Kaohsiung University of Science and Technology.",
+    certification: "HSK 5 & TOCFL B1",
+    experience: "Berpengalaman mengajar bahasa Mandarin.",
+    certificates: [
+      { label: "HSK 5 - Audrey", file: audreyHsk, type: "pdf" },
+      { label: "TOCFL B1 - Audrey", file: audreyTocfl, type: "image" }
     ]
   }
 ];
