@@ -9,7 +9,9 @@ const Navbar = () => {
 
   const navItems = [
     { name: "Beranda", path: "/" },
-    { name: "Tentang", path: "/tentang" }
+    { name: "Tentang", path: "/tentang" },
+    { name: "E-Book", path: "/store" },
+    { name: "FAQ", path: "/faq" }
   ];
 
   const isActive = (path: string) => location.pathname === path;

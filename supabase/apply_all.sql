@@ -111,6 +111,28 @@ CREATE INDEX IF NOT EXISTS payment_notifications_recent_idx
   ON public.payment_notifications (created_at DESC);
 ALTER TABLE public.payment_notifications ENABLE ROW LEVEL SECURITY;
 
+-- 7b. Manual payment (proof) + no-email tokenized access -------------------
+ALTER TABLE public.orders
+  ADD COLUMN IF NOT EXISTS proof_path      text,
+  ADD COLUMN IF NOT EXISTS rejection_note  text,
+  ADD COLUMN IF NOT EXISTS unique_code     integer,
+  ADD COLUMN IF NOT EXISTS access_token    text,
+  ADD COLUMN IF NOT EXISTS access_devices  text[] NOT NULL DEFAULT '{}';
+
+CREATE INDEX IF NOT EXISTS orders_awaiting_idx
+  ON public.orders (status, created_at DESC)
+  WHERE status = 'awaiting_verification';
+
+-- Unique nominal per waiting order (QRIS/BCA matching).
+CREATE UNIQUE INDEX IF NOT EXISTS orders_pending_amount_uniq
+  ON public.orders (final_amount)
+  WHERE status = 'awaiting_verification';
+
+-- Magic-link access token (no-email reader access).
+CREATE UNIQUE INDEX IF NOT EXISTS orders_access_token_uniq
+  ON public.orders (access_token)
+  WHERE access_token IS NOT NULL;
+
 -- 8. Seed / Update default product title -----------------------------------
 UPDATE public.products
 SET title = 'E-Book Ling Chinese Lab Volume I'

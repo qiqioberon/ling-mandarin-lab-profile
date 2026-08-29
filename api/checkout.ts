@@ -37,6 +37,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  // Kill switch: until iPaymu is truly live, refuse online checkout so no buyer
+  // is sent to a sandbox that takes no money yet mints an entitlement.
+  if ((process.env.IPAYMU_MODE || 'disabled') !== 'live') {
+    return res.status(403).json({
+      error:
+        'Pembayaran online sedang dalam proses aktivasi. Silakan gunakan pembayaran QRIS.',
+    });
+  }
+
   try {
     const parsed = checkoutSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -90,10 +99,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // iPaymu redirect payment: buyer picks the channel on iPaymu's hosted page.
+    // Service fee is itemized separately so the iPaymu page matches the product
+    // price shown on the website (reviewer transparency). Total is unchanged.
     const body = {
-      product: [product.title],
-      qty: ['1'],
-      price: [String(amount)],
+      product: [product.title, 'Biaya Layanan'],
+      qty: ['1', '1'],
+      price: [String(product.price), String(SERVICE_FEE)],
       amount: String(amount),
       returnUrl: `${base}/payment/pending?orderRef=${orderRef}`,
       cancelUrl: `${base}/payment/pending?orderRef=${orderRef}`,

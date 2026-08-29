@@ -20,7 +20,11 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { ShieldCheck, Info, Wallet } from 'lucide-react';
+import { ShieldCheck, Info, Wallet, QrCode } from 'lucide-react';
+
+// Online (iPaymu) checkout only works when the server is in live mode. Until
+// then the button is shown but disabled — mirrors the IPAYMU_MODE server gate.
+const IPAYMU_LIVE = import.meta.env.VITE_IPAYMU_MODE === 'live';
 
 const formSchema = z.object({
   buyerName: z.string().min(2, 'Nama harus minimal 2 karakter'),
@@ -33,8 +37,6 @@ const formSchema = z.object({
     message: 'Anda harus menyetujui Syarat & Ketentuan',
   }),
 });
-
-const PAYMENT_METHODS = ['QRIS', 'GoPay', 'OVO', 'DANA', 'ShopeePay', 'Virtual Account', 'Kartu Kredit'];
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -262,13 +264,6 @@ export default function Checkout() {
                       />
                     </div>
 
-                    <Button
-                      type="submit"
-                      className="w-full hidden lg:flex bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-14 text-lg mt-6"
-                      disabled={isProcessing}
-                    >
-                      {isProcessing ? 'Memproses...' : `Bayar Sekarang — ${formatPrice(grandTotal)}`}
-                    </Button>
                   </form>
                 </Form>
               )}
@@ -317,40 +312,79 @@ export default function Checkout() {
                   <span>Grand Total</span>
                   <span>{formatPrice(grandTotal)}</span>
                 </div>
-              </div>
-
-              {/* Payment methods available via iPaymu */}
-              <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200/80 rounded-xl p-4 mb-6">
-                <div className="flex items-center gap-2 text-amber-900 font-semibold text-sm mb-2">
-                  <Wallet className="w-4 h-4 text-amber-700" />
-                  <span>Bayar pakai apa saja</span>
-                </div>
-                <p className="text-xs text-amber-800/90 leading-relaxed mb-3">
-                  Pilih metode di halaman pembayaran: QRIS, e-Wallet, Virtual Account, atau kartu.
-                  Akses e-book terbuka otomatis setelah pembayaran.
+                <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
+                  Harga e-book {formatPrice(item.price)} + Biaya layanan{' '}
+                  {serviceFee === null ? '...' : formatPrice(serviceFee)} = Total {formatPrice(grandTotal)}
                 </p>
-                <div className="flex flex-wrap gap-1.5 text-[11px] font-medium text-amber-900/80">
-                  {PAYMENT_METHODS.map((m) => (
-                    <span key={m} className="bg-white/80 border border-amber-200/60 rounded px-2 py-0.5">
-                      {m}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center mt-4">
-                <ShieldCheck className="w-4 h-4 text-green-600 flex-shrink-0" />
-                <span>Pembayaran aman via iPaymu</span>
               </div>
 
               {!isOwned && (
-                <Button
-                  onClick={form.handleSubmit(onSubmit)}
-                  className="w-full lg:hidden bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-14 text-lg mt-6"
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? 'Memproses...' : 'Bayar Sekarang'}
-                </Button>
+                <div className="mt-6">
+                  <h3 className="text-sm font-bold text-foreground mb-3">Pilih Metode Pembayaran</h3>
+                  <div className="space-y-3">
+                    {/* Scan QRIS — primary, full width, solid */}
+                    <button
+                      type="button"
+                      onClick={() => navigate('/bayar-manual')}
+                      className="w-full text-left rounded-xl bg-primary text-primary-foreground p-4 hover:bg-primary/90 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <QrCode className="w-5 h-5" />
+                            <span className="font-bold">Scan QRIS</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wide bg-white/20 rounded-full px-2 py-0.5">
+                              Instan
+                            </span>
+                          </div>
+                          <p className="text-xs text-primary-foreground/80 mt-1 leading-relaxed">
+                            Scan &amp; bayar via aplikasi bank atau e-wallet apa saja. Akses terbuka
+                            setelah pembayaran diverifikasi (maks. 1×24 jam).
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="font-bold">{formatPrice(grandTotal)}</p>
+                          <p className="text-[10px] text-primary-foreground/70">Termasuk biaya layanan</p>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Bayar Online — iPaymu (disabled until live) */}
+                    <button
+                      type="button"
+                      onClick={IPAYMU_LIVE ? form.handleSubmit(onSubmit) : undefined}
+                      disabled={!IPAYMU_LIVE || isProcessing}
+                      className="w-full text-left rounded-xl border border-border bg-white p-4 hover:bg-sand/30 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Wallet className="w-5 h-5 text-amber-600" />
+                            <span className="font-bold text-foreground">Bayar Online</span>
+                            <span className="text-[10px] font-medium text-muted-foreground">
+                              QRIS, VA, E-Wallet
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1 leading-relaxed italic">
+                            {!IPAYMU_LIVE
+                              ? 'Sedang dalam proses aktivasi.'
+                              : isProcessing
+                                ? 'Mengarahkan ke halaman pembayaran…'
+                                : 'QRIS, Virtual Account, e-Wallet, atau kartu. Akses terbuka otomatis setelah pembayaran.'}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="font-bold text-foreground">{formatPrice(grandTotal)}</p>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center mt-4">
+                    <ShieldCheck className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span>Pembayaran aman &amp; terenkripsi</span>
+                  </div>
+                </div>
               )}
             </div>
           </div>

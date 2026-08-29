@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { pdfjs, Document, Page } from 'react-pdf';
 import HTMLFlipBook from 'react-pageflip';
 import { Button } from '@/components/ui/button';
@@ -35,9 +35,14 @@ PdfPageWrapper.displayName = 'PdfPageWrapper';
 export default function Read() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const accessTokenParam = searchParams.get('t');
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [accessError, setAccessError] = useState<string | null>(null);
+  // Traceable watermark label (orderRef for magic-link buyers, email otherwise).
+  const [watermark, setWatermark] = useState<string | null>(null);
   
   // State untuk fitur advanced
   const [viewMode, setViewMode] = useState<'flip' | 'scroll'>(window.innerWidth < 768 ? 'scroll' : 'flip');
@@ -107,6 +112,31 @@ export default function Read() {
     const fetchUrl = async () => {
       try {
         setLoading(true);
+        setAccessError(null);
+
+        // No-email access: a magic-link token bound to this device.
+        if (accessTokenParam) {
+          let deviceId = localStorage.getItem('reader_device_id');
+          if (!deviceId) {
+            deviceId = crypto.randomUUID();
+            localStorage.setItem('reader_device_id', deviceId);
+          }
+          const res = await fetch('/api/get-reader-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slug, token: accessTokenParam, deviceId }),
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            setAccessError(err.error || 'Akses ditolak.');
+            return;
+          }
+          const data = await res.json();
+          setPdfUrl(data.signedUrl);
+          if (data.watermark) setWatermark(data.watermark);
+          return;
+        }
+
         const { data: { session } } = await supabase.auth.getSession();
         const token = session?.access_token;
         const isGuestMode = localStorage.getItem('demo_guest_email') || slug === 'test' || !token;
@@ -116,7 +146,7 @@ export default function Read() {
           setLoading(false);
           return;
         }
-        
+
         const res = await fetch('/api/get-reader-url', {
           method: 'POST',
           headers: {
@@ -125,25 +155,27 @@ export default function Read() {
           },
           body: JSON.stringify({ slug })
         });
-        
+
         if (!res.ok) {
           const err = await res.json();
           // Fallback to preview PDF if testing locally or demo
           setPdfUrl('/preview-katalog.pdf');
           return;
         }
-        
+
         const data = await res.json();
         setPdfUrl(data.signedUrl);
+        if (data.watermark) setWatermark(data.watermark);
       } catch (err) {
-        setPdfUrl('/preview-katalog.pdf');
+        if (accessTokenParam) setAccessError('Terjadi kesalahan. Coba lagi.');
+        else setPdfUrl('/preview-katalog.pdf');
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchUrl();
-  }, [slug]);
+  }, [slug, accessTokenParam]);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
@@ -284,6 +316,15 @@ export default function Read() {
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-zinc-900 text-white">Loading e-book...</div>;
+  if (accessError) return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-900 text-white gap-4 px-6 text-center">
+      <h2 className="text-xl font-bold">Tidak bisa membuka e-book</h2>
+      <p className="text-zinc-300 max-w-md">{accessError}</p>
+      <Button variant="outline" onClick={() => window.open('https://wa.me/6285100195519', '_blank')}>
+        Hubungi Admin via WhatsApp
+      </Button>
+    </div>
+  );
   if (!pdfUrl) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-900 text-white gap-4">
       <h2>Akses Ditolak / E-Book Tidak Ditemukan</h2>
@@ -433,10 +474,15 @@ export default function Read() {
           pageId={activeQuizPage || 0}
         />
 
-        {/* WATERMARK ANTI-SCREENSHOT (Tetap di luar container supaya menimpa semuanya) */}
-        <div className="fixed inset-0 z-40 pointer-events-none flex flex-col items-center justify-center opacity-[0.03] rotate-[-30deg]">
-          <p className="text-4xl md:text-8xl font-black text-white break-all text-center">{buyerEmail}</p>
-          <p className="text-2xl md:text-6xl font-bold text-white mt-4">Ling Chinese Lab</p>
+        {/* WATERMARK — traceable per buyer, tiled diagonally over every page.
+            Doesn't stop screenshots (nothing does); it deters sharing because
+            every leak traces back to the buyer. */}
+        <div className="fixed inset-0 z-40 pointer-events-none overflow-hidden rotate-[-30deg] scale-150 flex flex-wrap content-center justify-center gap-x-16 gap-y-24 opacity-[0.12]">
+          {Array.from({ length: 40 }).map((_, i) => (
+            <span key={i} className="text-lg md:text-2xl font-bold text-white whitespace-nowrap">
+              {watermark || buyerEmail} · Ling Chinese Lab
+            </span>
+          ))}
         </div>
 
         <Document
