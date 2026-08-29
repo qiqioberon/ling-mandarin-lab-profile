@@ -65,7 +65,15 @@ export default function AdminDashboard() {
         const res = await fetch('/api/admin/dashboard', {
           headers: { 'x-admin-user': u, 'x-admin-password': p },
         });
-        const data = await res.json();
+        // Server may return non-JSON on a crash (e.g. missing env) — read text
+        // first so the real message shows instead of "Unexpected token".
+        const raw = await res.text();
+        let data: { error?: string; orders?: Order[] } = {};
+        try {
+          data = raw ? JSON.parse(raw) : {};
+        } catch {
+          throw new Error(raw.slice(0, 200) || `Server error (${res.status})`);
+        }
         if (res.status === 401) {
           setAuthed(false);
           sessionStorage.removeItem('admin_dash');

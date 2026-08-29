@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/hooks/useAuth';
 import { useCart, CartItem } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
@@ -24,20 +24,10 @@ const ACCEPTED: Record<string, string> = {
 const MAX_BYTES = 5 * 1024 * 1024;
 
 // Soft-launch gate: the payment UI is hidden from the public until launch.
-// Set VITE_PAYMENTS_LIVE=true to open it to everyone. Until then only the
-// preview emails (logged in via Supabase OTP) see the checkout.
-// api/manual/create.ts enforces the same PAYMENTS_LIVE / PREVIEW_EMAILS
-// server-side — keep the two lists in sync.
+// Set VITE_PAYMENTS_LIVE=true to open it to everyone. Until then the owner can
+// unlock the preview with a password (no login/email needed).
 const PAYMENTS_LIVE = import.meta.env.VITE_PAYMENTS_LIVE === 'true';
-const PREVIEW_EMAILS = (
-  import.meta.env.VITE_PREVIEW_EMAILS ||
-  'lingchineselab@gmail.com,lingmandarinlab@gmail.com,firaniaputriharsanti23@gmail.com'
-)
-  .split(',')
-  .map((e: string) => e.trim().toLowerCase())
-  .filter(Boolean);
-const canPreviewPayments = (email?: string | null) =>
-  !!email && PREVIEW_EMAILS.includes(email.toLowerCase());
+const STORE_PREVIEW_PASSWORD = import.meta.env.VITE_STORE_PREVIEW_PASSWORD || 'admin123';
 
 type QrisOrder = {
   orderRef: string;
@@ -73,9 +63,20 @@ export default function Store() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { addToCart, setIsCartOpen } = useCart();
-  const { user } = useAuth();
-  const showPayments = PAYMENTS_LIVE || canPreviewPayments(user?.email);
+  const [previewUnlocked, setPreviewUnlocked] = useState(() => localStorage.getItem('store_preview') === '1');
+  const [previewPass, setPreviewPass] = useState('');
+  const showPayments = PAYMENTS_LIVE || previewUnlocked;
   const [previewPage, setPreviewPage] = useState(1); // 1, 2, 3 = preview pages, 4 = locked purchase page
+
+  const unlockPreview = () => {
+    if (previewPass === STORE_PREVIEW_PASSWORD) {
+      localStorage.setItem('store_preview', '1');
+      setPreviewUnlocked(true);
+      toast.success('Preview toko dibuka.');
+    } else {
+      toast.error('Password salah.');
+    }
+  };
 
   // Checkout form states
   const [buyerName, setBuyerName] = useState('');
@@ -613,6 +614,22 @@ export default function Store() {
             <p className="text-muted-foreground mt-3 max-w-md mx-auto">
               Pembelian e-book akan segera dibuka. Nantikan ya! 🙏
             </p>
+
+            {/* Owner preview: unlock the store early with a password (no login). */}
+            <form
+              onSubmit={(e) => { e.preventDefault(); unlockPreview(); }}
+              className="mt-8 pt-6 border-t border-dashed max-w-xs mx-auto flex gap-2"
+            >
+              <Input
+                type="password"
+                placeholder="Password preview"
+                value={previewPass}
+                onChange={(e) => setPreviewPass(e.target.value)}
+                className="h-11 bg-sand/30"
+                autoComplete="off"
+              />
+              <Button type="submit" variant="outline" className="h-11 shrink-0">Masuk</Button>
+            </form>
           </div>
         )}
       </div>

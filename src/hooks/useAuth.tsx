@@ -6,7 +6,6 @@ type AuthContextType = {
   session: Session | null;
   user: User | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
   signInWithOtpEmail: (email: string) => Promise<{ error: AuthError | null }>;
   verifyOtp: (
     email: string,
@@ -40,16 +39,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin + '/library'
-      }
-    });
-    if (error) console.error("Error signing in with Google:", error.message);
-  };
-
   const signInWithOtpEmail = async (email: string) => {
     return await supabase.auth.signInWithOtp({
       email,
@@ -73,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, signInWithGoogle, signInWithOtpEmail, verifyOtp, signOut }}>
+    <AuthContext.Provider value={{ session, user, loading, signInWithOtpEmail, verifyOtp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
