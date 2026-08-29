@@ -26,8 +26,8 @@ const MAX_BYTES = 5 * 1024 * 1024;
 // Soft-launch gate: the payment UI is hidden from the public until launch.
 // Set VITE_PAYMENTS_LIVE=true to open it to everyone. Until then only the
 // preview emails (logged in via Supabase OTP) see the checkout.
-// ponytail: UI-only gate — the /api/manual/create endpoint stays reachable
-// (a stray order is harmless; add a server flag if that changes).
+// api/manual/create.ts enforces the same PAYMENTS_LIVE / PREVIEW_EMAILS
+// server-side — keep the two lists in sync.
 const PAYMENTS_LIVE = import.meta.env.VITE_PAYMENTS_LIVE === 'true';
 const PREVIEW_EMAILS = (
   import.meta.env.VITE_PREVIEW_EMAILS ||
@@ -111,7 +111,7 @@ export default function Store() {
           // Jika kosong, pakai mock untuk testing UI
           setProducts([mockProduct]);
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error("Error fetching products:", err);
         setProducts([mockProduct]); // Fallback ke mock
       } finally {
@@ -206,8 +206,8 @@ export default function Store() {
           finalAmount: data.finalAmount,
           expiresAt: data.expiresAt,
         });
-      } catch (err: any) {
-        toast.error(err.message);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Gagal memproses pembayaran');
       } finally {
         setIsSubmitting(false);
       }
@@ -260,8 +260,8 @@ export default function Store() {
         xhr.send(proofFile);
       });
       setPaidDone(true);
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Gagal mengunggah bukti');
     } finally {
       setUploading(false);
     }

@@ -37,6 +37,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  // Kill switch: until iPaymu is truly live, refuse online checkout so no buyer
+  // is sent to a sandbox that takes no money yet mints an entitlement.
+  if ((process.env.IPAYMU_MODE || 'disabled') !== 'live') {
+    return res.status(403).json({
+      error:
+        'Pembayaran online sedang dalam proses aktivasi. Silakan gunakan pembayaran QRIS.',
+    });
+  }
+
   try {
     const parsed = checkoutSchema.safeParse(req.body);
     if (!parsed.success) {

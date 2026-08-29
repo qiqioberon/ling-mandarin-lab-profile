@@ -16,6 +16,16 @@ const ORDER_EXPIRY_MINUTES = 24 * 60;
 const MAX_PENDING_PER_EMAIL = 3;
 const MAX_CODE_ATTEMPTS = 12;
 
+// Server-side twin of the VITE_ soft-launch gate in Store.tsx. The VITE_ vars
+// only gate the browser UI; without this an order can still be POSTed straight
+// from DevTools. Keep PAYMENTS_LIVE / PREVIEW_EMAILS byte-for-byte in sync with
+// their VITE_ counterparts.
+const PAYMENTS_LIVE = process.env.PAYMENTS_LIVE === 'true';
+const PREVIEW_EMAILS = (process.env.PREVIEW_EMAILS || '')
+  .split(',')
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
+
 const manualSchema = z.object({
   productId: z.string().min(1),
   buyerEmail: z.string().email(),
@@ -41,6 +51,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .json({ error: parsed.error.issues[0]?.message || 'Permintaan tidak valid' });
     }
     const { productId, buyerEmail, buyerName, buyerWhatsapp, method } = parsed.data;
+
+    // Soft-launch gate: before launch only preview emails may create orders.
+    if (!PAYMENTS_LIVE && !PREVIEW_EMAILS.includes(String(buyerEmail).toLowerCase())) {
+      return res.status(403).json({ error: 'Penjualan belum dibuka untuk umum.' });
+    }
 
     // Same shared guards as checkout.ts (beta whitelist / product / ownership).
     const guard = await guardPurchase(productId, buyerEmail);

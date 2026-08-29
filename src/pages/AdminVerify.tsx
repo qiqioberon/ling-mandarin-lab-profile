@@ -42,7 +42,7 @@ function whatsappMessage(o: AdminOrder, accessUrl: string) {
   return (
     `Halo ${o.buyerName}, pembayaran Anda untuk ${o.productTitle} sudah kami verifikasi. ✅\n\n` +
     `Ini link pribadi untuk membaca e-book Anda (langsung buka, tanpa login):\n${accessUrl}\n\n` +
-    `Link ini aktif untuk maksimal 2 perangkat (mis. HP & laptop) — mohon jangan dibagikan.\n` +
+    `Link ini aktif untuk maksimal 3 perangkat (mis. HP & laptop) — mohon jangan dibagikan.\n` +
     `Kode pesanan: ${o.orderRef}\n\nTerima kasih! 🙏`
   );
 }
@@ -121,7 +121,7 @@ export default function AdminVerify() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal');
-      toast.success('Perangkat direset. Pembeli bisa aktifkan ulang di 2 perangkat baru.');
+      toast.success('Perangkat direset. Pembeli bisa aktifkan ulang di 3 perangkat baru.');
       setResetRef('');
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Gagal');
@@ -269,11 +269,11 @@ export default function AdminVerify() {
               className="bg-white"
             />
             <Button variant="outline" onClick={resetDevices} disabled={!resetRef.trim()} className="shrink-0">
-              Reset 2 perangkat
+              Reset 3 perangkat
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-2">
-            Mengosongkan perangkat terikat agar pembeli bisa aktifkan ulang link di 2 perangkat baru (mis. ganti HP/laptop).
+            Mengosongkan perangkat terikat agar pembeli bisa aktifkan ulang link di 3 perangkat baru (mis. ganti HP/laptop).
           </p>
         </details>
 

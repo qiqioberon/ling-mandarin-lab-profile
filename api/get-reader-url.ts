@@ -7,16 +7,20 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
-const MAX_DEVICES = 2; // phone + laptop
+const MAX_DEVICES = 3; // phone + laptop + spare (incognito/cache-clear churn)
 
-async function signPdf(pdfPath: string, res: VercelResponse) {
+async function signPdf(
+  pdfPath: string,
+  res: VercelResponse,
+  extra: Record<string, unknown> = {}
+) {
   const { data, error } = await supabase.storage
     .from('ebooks')
     .createSignedUrl(pdfPath, 60);
   if (error || !data) {
     return res.status(500).json({ error: 'Failed to generate signed URL' });
   }
-  return res.status(200).json({ signedUrl: data.signedUrl });
+  return res.status(200).json({ signedUrl: data.signedUrl, ...extra });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -34,7 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       const { data: order } = await supabase
         .from('orders')
-        .select('id, product_id, status, access_devices')
+        .select('id, order_ref, buyer_email, product_id, status, access_devices')
         .eq('access_token', token)
         .maybeSingle();
 
@@ -42,15 +46,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(403).json({ error: 'Link tidak valid atau pembayaran belum diverifikasi.' });
       }
 
-      // ponytail: read-modify-write device claim; a tiny race could admit a 3rd
+      // ponytail: read-modify-write device claim; a tiny race could admit a 4th
       // device under simultaneous first-opens. Fine at this volume; tighten with
       // a DB function if it ever matters.
       const devices: string[] = order.access_devices || [];
       const decision = decideDeviceAccess(devices, deviceId, MAX_DEVICES);
       if (decision === 'deny') {
         return res.status(403).json({
-          error: 'Link ini sudah aktif di 2 perangkat. Hubungi kami untuk reset.',
+          error: `Akses e-book ini sudah terdaftar di ${MAX_DEVICES} perangkat. Kalau Anda mengganti perangkat atau membersihkan data browser, hubungi kami dengan menyertakan kode pesanan ${order.order_ref}.`,
           deviceLimit: true,
+          orderRef: order.order_ref,
         });
       }
       if (decision === 'claim') {
@@ -69,7 +74,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!product?.pdf_path) {
         return res.status(404).json({ error: 'Product or PDF file not found' });
       }
-      return signPdf(product.pdf_path, res);
+      // Watermark identity for the reader overlay (traceable per buyer).
+      return signPdf(product.pdf_path, res, {
+        watermark: order.order_ref,
+        orderRef: order.order_ref,
+      });
     }
 
     // ── Legacy path: Supabase auth token → entitlement by email ────────────────
@@ -116,7 +125,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(403).json({ error: 'Forbidden. You do not have access to this product.' });
     }
 
-    return signPdf(product.pdf_path, res);
+    return signPdf(product.pdf_path, res, { watermark: verifiedEmail });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal Server Error';
     return res.status(500).json({ error: message });

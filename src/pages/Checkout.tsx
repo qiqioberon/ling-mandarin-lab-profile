@@ -22,6 +22,10 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { ShieldCheck, Info, Wallet, QrCode } from 'lucide-react';
 
+// Online (iPaymu) checkout only works when the server is in live mode. Until
+// then the button is shown but disabled — mirrors the IPAYMU_MODE server gate.
+const IPAYMU_LIVE = import.meta.env.VITE_IPAYMU_MODE === 'live';
+
 const formSchema = z.object({
   buyerName: z.string().min(2, 'Nama harus minimal 2 karakter'),
   buyerEmail: z.string().email('Format email tidak valid'),
@@ -318,53 +322,55 @@ export default function Checkout() {
                 <div className="mt-6">
                   <h3 className="text-sm font-bold text-foreground mb-3">Pilih Metode Pembayaran</h3>
                   <div className="space-y-3">
-                    {/* Scan QRIS — featured */}
+                    {/* Scan QRIS — primary, full width, solid */}
                     <button
                       type="button"
                       onClick={() => navigate('/bayar-manual')}
-                      className="w-full text-left rounded-xl border-2 border-primary bg-primary/5 p-4 hover:bg-primary/10 transition-colors"
+                      className="w-full text-left rounded-xl bg-primary text-primary-foreground p-4 hover:bg-primary/90 transition-colors"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <QrCode className="w-5 h-5 text-primary" />
-                            <span className="font-bold text-foreground">Scan QRIS</span>
-                            <span className="text-[10px] font-bold uppercase tracking-wide bg-primary text-primary-foreground rounded-full px-2 py-0.5">
+                            <QrCode className="w-5 h-5" />
+                            <span className="font-bold">Scan QRIS</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wide bg-white/20 rounded-full px-2 py-0.5">
                               Instan
                             </span>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                          <p className="text-xs text-primary-foreground/80 mt-1 leading-relaxed">
                             Scan &amp; bayar via aplikasi bank atau e-wallet apa saja. Akses terbuka
                             setelah pembayaran diverifikasi (maks. 1×24 jam).
                           </p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="font-bold text-primary">{formatPrice(grandTotal)}</p>
-                          <p className="text-[10px] text-muted-foreground">Termasuk biaya layanan</p>
+                          <p className="font-bold">{formatPrice(grandTotal)}</p>
+                          <p className="text-[10px] text-primary-foreground/70">Termasuk biaya layanan</p>
                         </div>
                       </div>
                     </button>
 
-                    {/* Bayar Online — iPaymu (automatic) */}
+                    {/* Bayar Online — iPaymu (disabled until live) */}
                     <button
                       type="button"
-                      onClick={form.handleSubmit(onSubmit)}
-                      disabled={isProcessing}
-                      className="w-full text-left rounded-xl border border-border bg-white p-4 hover:bg-sand/30 transition-colors disabled:opacity-60"
+                      onClick={IPAYMU_LIVE ? form.handleSubmit(onSubmit) : undefined}
+                      disabled={!IPAYMU_LIVE || isProcessing}
+                      className="w-full text-left rounded-xl border border-border bg-white p-4 hover:bg-sand/30 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <Wallet className="w-5 h-5 text-amber-600" />
                             <span className="font-bold text-foreground">Bayar Online</span>
-                            <span className="text-[10px] font-bold uppercase tracking-wide bg-green-100 text-green-700 rounded-full px-2 py-0.5">
-                              Otomatis
+                            <span className="text-[10px] font-medium text-muted-foreground">
+                              QRIS, VA, E-Wallet
                             </span>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                            {isProcessing
-                              ? 'Mengarahkan ke halaman pembayaran…'
-                              : 'QRIS, Virtual Account, e-Wallet, atau kartu. Akses terbuka otomatis setelah pembayaran.'}
+                          <p className="text-xs text-muted-foreground mt-1 leading-relaxed italic">
+                            {!IPAYMU_LIVE
+                              ? 'Sedang dalam proses aktivasi.'
+                              : isProcessing
+                                ? 'Mengarahkan ke halaman pembayaran…'
+                                : 'QRIS, Virtual Account, e-Wallet, atau kartu. Akses terbuka otomatis setelah pembayaran.'}
                           </p>
                         </div>
                         <div className="text-right shrink-0">

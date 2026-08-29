@@ -46,7 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!order) {
       return res.status(404).json({ error: 'Order tidak ditemukan.' });
     }
-    const product = (order as any).product;
+    const product = (order as unknown as { product: { title: string; slug: string } | null }).product;
     const productTitle = product?.title ?? 'E-Book';
     const productSlug = product?.slug ?? '';
 
@@ -54,9 +54,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (action === 'reset_devices') {
       const { error } = await supabase
         .from('orders')
-        .update({ access_devices: [] })
+        .update({ access_devices: [], verified_by: auth.email, verified_at: new Date().toISOString() })
         .eq('order_ref', orderRef);
       if (error) throw error;
+      // Audit who reset and when (Telegram is the ops log for this flow).
+      await notifyTelegram(
+        `🔄 <b>Reset perangkat</b>\nRef: <code>${orderRef}</code>\nOleh: ${auth.email}`
+      );
       return res.status(200).json({ ok: true, action: 'reset_devices' });
     }
 

@@ -64,7 +64,7 @@ export async function ipaymuPost(
   path: string,
   body: unknown,
   config: IpaymuConfig = getIpaymuConfig()
-): Promise<{ ok: boolean; status: number; data: any }> {
+): Promise<{ ok: boolean; status: number; data: unknown }> {
   const { serializedBody, signature, timestamp } = signIpaymuBody(body, config);
   const res = await fetch(`${config.baseUrl}${path}`, {
     method: 'POST',
@@ -77,7 +77,7 @@ export async function ipaymuPost(
     },
     body: serializedBody,
   });
-  let data: any = null;
+  let data: unknown = null;
   try {
     data = await res.json();
   } catch {

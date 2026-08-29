@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (error) throw error;
 
     const result = await Promise.all(
-      (orders || []).map(async (o: Record<string, any>) => {
+      (orders || []).map(async (o) => {
         let proofUrl: string | null = null;
         if (o.proof_path) {
           const { data: signed } = await supabase.storage
