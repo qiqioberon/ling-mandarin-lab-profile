@@ -35,8 +35,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  // Log the raw callback shape BEFORE any parsing. iPaymu's callback structure
+  // isn't documented, so this is the ground truth for fixing field names.
+  console.log(
+    '[ipaymu-notify] RAW',
+    JSON.stringify({ headers: req.headers, body: req.body, query: req.query })
+  );
+
   try {
     const fields = normalizeBody(req.body);
+
+    // Permanent audit trail of every inbound callback (best-effort).
+    supabase
+      .from('payment_notifications')
+      .insert({
+        source: 'ipaymu',
+        raw: JSON.stringify({ body: req.body, query: req.query }),
+        order_ref: fields.reference_id || fields.referenceId || null,
+        received_at: new Date().toISOString(),
+      })
+      .then(({ error }) => {
+        if (error) console.error('[ipaymu-notify] audit insert failed:', error.message);
+      });
     const orderRef = fields.reference_id || fields.referenceId;
     const trxId = fields.trx_id || fields.trxId || fields.sid;
 

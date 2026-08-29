@@ -12,7 +12,6 @@ type AuthContextType = {
     email: string,
     token: string
   ) => Promise<{ error: AuthError | null }>;
-  loginAsGuest: (email?: string) => void;
   signOut: () => Promise<void>;
 };
 
@@ -27,46 +26,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Dapatkan sesi saat ini
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session?.user) {
-        setUser(session.user);
-      } else {
-        const savedGuest = localStorage.getItem('demo_guest_email');
-        if (savedGuest) {
-          setUser({
-            id: 'guest-user-id',
-            email: savedGuest,
-            app_metadata: {},
-            user_metadata: {},
-            aud: 'authenticated',
-            created_at: new Date().toISOString()
-          } as unknown as User);
-        } else {
-          setUser(null);
-        }
-      }
+      setUser(session?.user ?? null);
       setLoading(false);
     });
 
     // Dengarkan perubahan auth (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session?.user) {
-        setUser(session.user);
-      } else {
-        const savedGuest = localStorage.getItem('demo_guest_email');
-        if (savedGuest) {
-          setUser({
-            id: 'guest-user-id',
-            email: savedGuest,
-            app_metadata: {},
-            user_metadata: {},
-            aud: 'authenticated',
-            created_at: new Date().toISOString()
-          } as unknown as User);
-        } else {
-          setUser(null);
-        }
-      }
+      setUser(session?.user ?? null);
       setLoading(false);
     });
 
@@ -100,26 +67,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const loginAsGuest = (email: string = 'firaniaputriharsanti23@gmail.com') => {
-    localStorage.setItem('demo_guest_email', email);
-    setUser({
-      id: 'guest-user-id',
-      email: email,
-      app_metadata: {},
-      user_metadata: {},
-      aud: 'authenticated',
-      created_at: new Date().toISOString()
-    } as unknown as User);
-  };
-
   const signOut = async () => {
-    localStorage.removeItem('demo_guest_email');
     await supabase.auth.signOut();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, signInWithGoogle, signInWithOtpEmail, verifyOtp, loginAsGuest, signOut }}>
+    <AuthContext.Provider value={{ session, user, loading, signInWithGoogle, signInWithOtpEmail, verifyOtp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

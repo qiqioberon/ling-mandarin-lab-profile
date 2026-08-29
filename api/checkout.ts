@@ -90,10 +90,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // iPaymu redirect payment: buyer picks the channel on iPaymu's hosted page.
+    // Service fee is itemized separately so the iPaymu page matches the product
+    // price shown on the website (reviewer transparency). Total is unchanged.
     const body = {
-      product: [product.title],
-      qty: ['1'],
-      price: [String(amount)],
+      product: [product.title, 'Biaya Layanan'],
+      qty: ['1', '1'],
+      price: [String(product.price), String(SERVICE_FEE)],
       amount: String(amount),
       returnUrl: `${base}/payment/pending?orderRef=${orderRef}`,
       cancelUrl: `${base}/payment/pending?orderRef=${orderRef}`,

@@ -17,6 +17,9 @@ import { CartSheet } from "./components/store/CartSheet";
 
 import Terms from "./pages/Terms";
 import RefundPolicy from "./pages/RefundPolicy";
+import ManualPayment from "./pages/ManualPayment";
+import AdminVerify from "./pages/AdminVerify";
+import Faq from "./pages/Faq";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +41,9 @@ const App = () => (
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/payment/pending" element={<PaymentPending />} />
               <Route path="/library" element={<Library />} />
+              <Route path="/bayar-manual" element={<ManualPayment />} />
+              <Route path="/admin/verify" element={<AdminVerify />} />
+              <Route path="/faq" element={<Faq />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/refund-policy" element={<RefundPolicy />} />
               <Route path="/legal" element={<Terms />} />

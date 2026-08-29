@@ -19,8 +19,10 @@ import fs from "fs";
  */
 function localApiPlugin(env: Record<string, string>) {
   // Handler modules read secrets from process.env; make the .env values visible.
+  // Vite restarts in-process, so a stale/empty value from an earlier start would
+  // otherwise stick — a non-empty .env value always wins here.
   for (const [key, value] of Object.entries(env)) {
-    if (process.env[key] === undefined) process.env[key] = value;
+    if (value !== "" && value !== undefined) process.env[key] = value;
   }
 
   const apiRoot = path.resolve(__dirname, "api");
