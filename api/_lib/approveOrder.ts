@@ -9,10 +9,14 @@ import { notifyTelegram, formatIDR } from './telegram';
  * paths can never grant access differently.
  */
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-);
+// Lazy so importing this module can't crash a function at load when the
+// Supabase env vars are unset (which Vercel renders as a non-JSON 500).
+function db() {
+  return createClient(
+    process.env.SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  );
+}
 
 function baseUrl() {
   return (process.env.PUBLIC_BASE_URL || 'https://www.lingchineselab.com').replace(/\/$/, '');
@@ -24,6 +28,7 @@ export type ApproveResult =
 
 /** Approve an order: settle → mint access token → return the reader link. */
 export async function approveOrder(orderRef: string, actor: string): Promise<ApproveResult> {
+  const supabase = db();
   const { data: order } = await supabase
     .from('orders')
     .select('amount, access_token, product:products(title, slug)')
@@ -72,6 +77,7 @@ export async function rejectOrder(
   actor: string,
   note?: string
 ): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+  const supabase = db();
   const { error } = await supabase
     .from('orders')
     .update({
